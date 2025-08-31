@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Graph" Version="5.91.0" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="3.14.0" />
   </ItemGroup>
 
 </Project>

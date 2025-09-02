@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph.Drives.Item;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Sites.GetAllSites;
-
+using DocumentFormat.OpenXml.Office;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Packaging;
 namespace Logbook.Controllers
 {
     [Authorize]
@@ -38,11 +40,17 @@ namespace Logbook.Controllers
             var fileBytes = await httpClient.GetByteArrayAsync(downloadUrl);
 
             // Save to disk
-            await System.IO.File.WriteAllBytesAsync("report.xlsx", fileBytes);
+            await System.IO.File.WriteAllBytesAsync("files/report.xlsx", fileBytes);
             Console.WriteLine("File downloaded successfully.");
 
 
-            return Ok(downloadUrl);
+            using var stream = new MemoryStream(fileBytes);
+
+            using SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(stream, false);
+
+            WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
+            string sheetName = workbookPart.Workbook.Sheets.GetFirstChild<Sheet>().Name;
+            return Ok(sheetName);
         }
 
         public class CreateCalendarParams

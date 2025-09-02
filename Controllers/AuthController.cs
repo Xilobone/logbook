@@ -30,7 +30,7 @@ namespace Logbook.Controllers
                 + "&response_type=code"
                 + $"&redirect_uri={_configuration["Client:RedirectUri"]}"
                 + "&response_mode=query"
-                + $"&scope=api://{_configuration["AzureAd:ClientId"]}/access_as_user offline_access openid profile"
+                + $"&scope=api://{_configuration["AzureAd:ClientId"]}/.default"
                 + "&state=12345";
 
             return Redirect(uri);
@@ -40,7 +40,7 @@ namespace Logbook.Controllers
         public async Task<IActionResult> Exchange([FromQuery] string code)
         {
             // The scopes must match the API you want to call
-            string[] scopes = new[] { $"api://{_configuration["AzureAd:ClientId"]}/access_as_user", "offline_access", "openid", "profile" };
+            string[] scopes = new[] { $"api://{_configuration["AzureAd:ClientId"]}/.default"};
 
             // Exchange authorization code for token
             var result = await _clientApplication.AcquireTokenByAuthorizationCode(scopes, code).ExecuteAsync();

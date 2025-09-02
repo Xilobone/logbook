@@ -9,6 +9,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+
+ConfidentialClient.Initialize(builder.Configuration);
+
 var app = builder.Build();
 
 app.UseAuthentication();

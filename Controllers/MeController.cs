@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
+using Microsoft.Graph.Models;
 using Microsoft.Identity.Client;
 
 namespace Logbook.Controllers
@@ -11,28 +12,43 @@ namespace Logbook.Controllers
     [Authorize]
     public class MeController : ControllerBase
     {
-        private readonly IConfidentialClientApplication _confidentialClient;
-
-        public MeController(IConfiguration config)
-        {
-            _confidentialClient = ConfidentialClientApplicationBuilder.Create(config["AzureAd:ClientId"])
-                .WithClientSecret(config["AzureAd:ClientSecret"])
-                .WithAuthority($"https://login.microsoftonline.com/{config["AzureAd:TenantId"]}")
-                .Build();
-        }
-
         [HttpGet]
         public async Task<IActionResult> GetMe()
         {
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-
-            var credential = new MsalOnBehalfOfCredential(_confidentialClient, incomingToken!);
-
-            var graphClient = new GraphServiceClient(credential);
+            var graphClient = GraphClient.GetByAccessCode(incomingToken);
 
             var me = await graphClient.Me.GetAsync();
 
             return Ok(new { me!.DisplayName, me.UserPrincipalName });
         }
+
+        [HttpGet("files")]
+        public async Task<IActionResult> GetMyFiles()
+        {
+            var incomingToken = await HttpContext.GetTokenAsync("access_token");
+            var graphClient = GraphClient.GetByAccessCode(incomingToken);
+
+            // Get the default drive for the user
+            var drive = await graphClient.Me.Drive.GetAsync();
+
+            // Get the root folder DriveItem
+            var rootFolder = await graphClient.Drives[drive.Id].Root.GetAsync();
+
+            // List all items in the root folder using the Children request builder
+            var childrenRequestBuilder = graphClient.Drives[drive.Id].Items[rootFolder.Id].Children;
+
+            var rootItems = await childrenRequestBuilder.GetAsync();
+
+            // Filter files only
+            foreach (var item in rootItems.Value.Where(i => i.File != null))
+            {
+                Console.WriteLine($"File: {item.Name}, Id: {item.Id}");
+            }
+
+             return Ok(rootItems.Value);
+        }
+
+           
     }
 }

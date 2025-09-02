@@ -14,10 +14,10 @@ namespace Logbook.Controllers
         {
             _configuration = configuration;
 
-            _clientApplication = ConfidentialClientApplicationBuilder.Create(_configuration["Client:ClientId"])
-                .WithClientSecret(_configuration["Client:ClientSecret"])
-                .WithRedirectUri(_configuration["Client:RedirectUri"])
-                .WithAuthority(new Uri($"https://login.microsoftonline.com/{_configuration["Client:TenantId"]}/v2.0"))
+            _clientApplication = ConfidentialClientApplicationBuilder.Create(_configuration["IdentityProvider:ClientId"])
+                .WithClientSecret(_configuration["IdentityProvider:ClientSecret"])
+                .WithRedirectUri(_configuration["IdentityProvider:RedirectUri"])
+                .WithAuthority(new Uri($"https://login.microsoftonline.com/{_configuration["IdentityProvider:TenantId"]}/v2.0"))
                 .Build();
         }
 
@@ -25,10 +25,10 @@ namespace Logbook.Controllers
         public IActionResult Login()
         {
 
-            string uri = $"https://login.microsoftonline.com/{_configuration["Client:TenantId"]}/oauth2/v2.0/authorize"
-                + $"?client_id={_configuration["Client:ClientId"]}"
+            string uri = $"https://login.microsoftonline.com/{_configuration["IdentityProvider:TenantId"]}/oauth2/v2.0/authorize"
+                + $"?client_id={_configuration["IdentityProvider:ClientId"]}"
                 + "&response_type=code"
-                + $"&redirect_uri={_configuration["Client:RedirectUri"]}"
+                + $"&redirect_uri={_configuration["IdentityProvider:RedirectUri"]}"
                 + "&response_mode=query"
                 + $"&scope=api://{_configuration["AzureAd:ClientId"]}/.default"
                 + "&state=12345";

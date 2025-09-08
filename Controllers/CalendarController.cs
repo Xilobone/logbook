@@ -1,12 +1,9 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Graph.Drives.Item;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Sites.GetAllSites;
-using DocumentFormat.OpenXml.Office;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Packaging;
+using Logbook.Calendar;
 namespace Logbook.Controllers
 {
     [Authorize]
@@ -28,12 +25,13 @@ namespace Logbook.Controllers
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateCalendar([FromBody] CreateCalendarParams param)
-        {
+        {   
+            //exchange token for a graph client
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
             var graphClient = GraphClient.GetByAccessCode(incomingToken);
 
+            //download file
             Drive? driveItem = await graphClient.Me.Drive.WithUrl($"https://graph.microsoft.com/v1.0/me/drive/root:{param.path}").GetAsync();
-
             string? downloadUrl = (string)driveItem!.AdditionalData["@microsoft.graph.downloadUrl"];
 
             using var httpClient = new HttpClient();
@@ -45,12 +43,13 @@ namespace Logbook.Controllers
 
 
             using var stream = new MemoryStream(fileBytes);
+            List<CalendarEvent> events = CalendarEvent.CreateFromStream(stream);
 
-            using SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(stream, false);
-
-            WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
-            string sheetName = workbookPart.Workbook.Sheets.GetFirstChild<Sheet>().Name;
-            return Ok(sheetName);
+            foreach (CalendarEvent e in events)
+            {
+                Console.WriteLine($"({e.StartTime} - {e.EndTime}) {e.Title}");
+            }
+            return Ok(events.Count);
         }
 
         public class CreateCalendarParams

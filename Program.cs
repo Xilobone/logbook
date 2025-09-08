@@ -6,6 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("IdentityProvider"));
 
+System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 

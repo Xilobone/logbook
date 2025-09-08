@@ -22,8 +22,6 @@ public class MsalOnBehalfOfCredential : TokenCredential
             .AcquireTokenOnBehalfOf(graphScopes, new UserAssertion(_incomingToken))
             .ExecuteAsync(cancellationToken);
 
-        Console.WriteLine(result.AccessToken);
-        
         return new AccessToken(result.AccessToken, result.ExpiresOn);
     }
 }

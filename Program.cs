@@ -1,4 +1,7 @@
+using Logbook;
+using Logbook.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,7 +14,11 @@ System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Inst
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+builder.Services.AddDbContext<LogbookDBContext>(options =>
+    options.UseSqlite(builder.Configuration["DBConnectionString"]));
 
+
+Logger.Initialize(builder.Configuration.GetSection("Logger"));
 ConfidentialClient.Initialize(builder.Configuration);
 
 var app = builder.Build();

@@ -76,7 +76,7 @@ namespace Logbook.Calendar
             foreach (Models.Event evnt in events)
             {
                 //check if event is already present, if so update if required, if not create event
-                string existingEventId = await calendar.FindEventId(evnt, calendarId);
+                string existingEventId = calendar.FindEventId(evnt, existingEvents);
                 string id;
                 if (string.IsNullOrEmpty(existingEventId))
                 {
@@ -94,7 +94,7 @@ namespace Logbook.Calendar
             //delete all events that have not just been checked, updated or created
             foreach (Models.Event e in deletedEvents)
             {
-                calendar.DeleteEvent(e.Id);
+                // calendar.DeleteEvent(e.Id);
             }
         }
 

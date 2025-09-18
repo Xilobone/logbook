@@ -6,6 +6,7 @@ using Microsoft.Graph.Sites.GetAllSites;
 using Logbook.Calendar;
 using Microsoft.Graph;
 using Logbook.Models;
+using System.Text.Json;
 
 namespace Logbook.Controllers
 {
@@ -56,6 +57,31 @@ namespace Logbook.Controllers
             await calendarManager.UpdateCalendar(calendarId, events);
 
             return Ok(events.Count);
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll()
+        {
+            //exchange token for a graph client
+            var incomingToken = await HttpContext.GetTokenAsync("access_token");
+            GraphServiceClient graphClient = GraphClient.GetByAccessCode(incomingToken);
+
+            CalendarManager calendarManager = new CalendarManager(graphClient);
+            string? calendarId = await calendarManager.GetOrCreateCalendar("Planning");
+
+            if (calendarId == null) throw new InvalidDataException("No calendar id was returned");
+
+            Calendar.Calendar calendar = new Logbook.Calendar.Calendar(graphClient, calendarId);
+
+            List<Models.Event> events = await calendar.GetAllEvents();
+
+            var data = new
+            {
+                Count = events.Count,
+                Data = events,
+            };
+            // string json = JsonSerializer.Serialize(data);
+            return Ok(data);
         }
 
         public class CreateCalendarParams

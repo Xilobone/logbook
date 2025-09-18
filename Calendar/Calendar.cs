@@ -22,39 +22,34 @@ namespace Logbook.Calendar
         {
             List<Models.Event> events = new List<Models.Event>();
 
-            EventCollectionResponse? eventsResponse = await _graphClient.Me.Calendars[_id].Events.GetAsync();
+            EventCollectionResponse? currentResponse = await _graphClient
+                .Me.Calendars[_id]
+                .Events
+                .GetAsync();
 
-            if (eventsResponse == null || eventsResponse.Value == null) return events;
-
-            foreach (Graph.Event e in eventsResponse.Value)
+            while (currentResponse != null && currentResponse.Value != null)
             {
-                events.Add(new Models.Event()
+                // Add current page of events
+                foreach (Graph.Event e in currentResponse.Value)
                 {
-                    Id = e.Id ?? string.Empty,
-                    StartTime = DateTime.Parse(e.Start!.DateTime!),
-                    EndTime = DateTime.Parse(e.End!.DateTime!),
-                    Title = e.Subject ?? "No subject"
-                });
-            }
+                    events.Add(ToLogbookEvent(e));
+                }
 
-            string? nextLink = eventsResponse.OdataNextLink;
-            while (!string.IsNullOrEmpty(nextLink))
-            {
-                Logger.Log(nextLink);
-                EventCollectionResponse? response = await _graphClient.Me.Calendars[_id].Events.WithUrl(eventsResponse.OdataNextLink).GetAsync();
-
-                if (response == null || response.Value == null) return events;
-                nextLink = response.OdataNextLink;
-
-                foreach (Graph.Event e in response.Value)
+                // Move to the next page if one exists
+                if (!string.IsNullOrEmpty(currentResponse.OdataNextLink))
                 {
-                    events.Add(new Models.Event()
-                    {
-                        Id = e.Id ?? string.Empty,
-                        StartTime = DateTime.Parse(e.Start!.DateTime!),
-                        EndTime = DateTime.Parse(e.End!.DateTime!),
-                        Title = e.Subject ?? "No subject"
-                    });
+                    Logger.Log($"Fetching next page: {currentResponse.OdataNextLink}");
+
+                    currentResponse = await _graphClient
+                        .Me.Calendars[_id]
+                        .Events
+                        .WithUrl(currentResponse.OdataNextLink)
+                        .GetAsync();
+                }
+                else
+                {
+                    // No more pages
+                    break;
                 }
             }
 
@@ -95,10 +90,9 @@ namespace Logbook.Calendar
             return;
         }
 
-        public async Task<string> FindEventId(Models.Event evnt, string calendarId)
+        public string FindEventId(Models.Event evnt, List<Models.Event> events)
         {
-            List<Models.Event> events = await GetAllEvents();
-
+            Logger.Log($"trying to find an event with name:{evnt.Title}", Logger.LogLevel.Warning);
             string? id = events
                 .Where(
                     e => e.StartTime.Equals(evnt.StartTime) &&
@@ -110,6 +104,17 @@ namespace Logbook.Calendar
             return id ?? string.Empty;
         }
 
+        private Models.Event ToLogbookEvent(Graph.Event @event)
+        {
+            string title = @event.Subject != null ? @event.Subject.Replace($"Opkomst {SPELTAK}: ", "") : "";
+            return new Models.Event
+            {
+                Id = @event.Id ?? string.Empty,
+                StartTime = DateTime.Parse(@event.Start!.DateTime!),
+                EndTime = DateTime.Parse(@event.End!.DateTime!),
+                Title = title
+            };
+        }
         private Graph.Event ToGraphEvent(Models.Event @event)
         {
             return new Event()

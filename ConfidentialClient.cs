@@ -1,3 +1,4 @@
+using Microsoft.Graph;
 using Microsoft.Identity.Client;
 
 public class ConfidentialClient
@@ -24,5 +25,14 @@ public class ConfidentialClient
     public static void Initialize(IConfiguration config)
     {
         _config = config;
+    }
+
+        public static GraphServiceClient GetByAccessCode(string? incomingToken)
+    {
+        if (incomingToken == null) throw new NullReferenceException("No incoming token was provided");
+
+        var credential = new MSALOnBehalfOfCredential(Instance, incomingToken!);
+
+        return new GraphServiceClient(credential);
     }
 }

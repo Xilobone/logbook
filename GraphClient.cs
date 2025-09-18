@@ -1,12 +1,12 @@
 using Microsoft.Graph;
-public class GraphClient
-{
-    public static GraphServiceClient GetByAccessCode(string? incomingToken)
-    {
-        if (incomingToken == null) throw new NullReferenceException("No incoming token was provided");
+// public class GraphClient
+// {
+//     public static GraphServiceClient GetByAccessCode(string? incomingToken)
+//     {
+//         if (incomingToken == null) throw new NullReferenceException("No incoming token was provided");
 
-        var credential = new MsalOnBehalfOfCredential(ConfidentialClient.Instance, incomingToken!);
+//         var credential = new MSALOnBehalfOfCredential(ConfidentialClient.Instance, incomingToken!);
 
-        return new GraphServiceClient(credential);
-    }
-}
+//         return new GraphServiceClient(credential);
+//     }
+// }

@@ -1,7 +1,15 @@
 namespace Logbook
 {
+    /// <summary>
+    /// This class serves as a more structured way to log messages, it has options to write the logs
+    /// to the console and/or to a file, and to filter out non-priority messages
+    /// </summary>
     public class Logger
-    {
+    {   
+        /// <summary>
+        /// The different log levels a message can have, ranging from Trace (least urgent)
+        /// to Critical (most urgent)
+        /// </summary>
         public enum LogLevel
         {
             /// <summary>
@@ -50,6 +58,11 @@ namespace Logbook
         private static Config? _config;
         private const string LINE_DELIMITER = "--------------------";
 
+        /// <summary>
+        /// Sets the configuration of the logger, must be called before the logger can be
+        /// ued properly
+        /// </summary>
+        /// <param name="configuration">The configuration to use</param>
         public static void Initialize(IConfiguration configuration)
         {
             _config = new Config()
@@ -61,12 +74,22 @@ namespace Logbook
             };
         }
 
-        public static void Log(string message)
+        /// <summary>
+        /// Logs the message with the default log level Info
+        /// </summary>
+        /// <param name="message">The message to be logged</param>
+        /// 
+        public static void Log(object? message)
         {
             Log(message, LogLevel.Info);
         }
 
-        public static void Log(string message, LogLevel logLevel)
+        /// <summary>
+        /// Logs the message with the specified log level
+        /// </summary>
+        /// <param name="message">The message to be logged</param>
+        /// <param name="logLevel">The level to log the message at</param>
+        public static void Log(object? message, LogLevel logLevel)
         {
             if (_config == null)
             {
@@ -90,28 +113,54 @@ namespace Logbook
             }
 
             if (_config.writeToFile)
-                {
-                    StreamWriter writer = File.AppendText(_config.filePath);
-                    writer.WriteLine(formatted);
-                    writer.Close();
-                }
+            {
+                StreamWriter writer = File.AppendText(_config.filePath);
+                writer.WriteLine(formatted);
+                writer.Close();
+            }
         }
 
-        public static void Log<T>(ICollection<object> values)
+        /// <summary>
+        /// Logs the values on seperate lines with the default loglevel Info
+        /// </summary>
+        /// <typeparam name="T">The type of the values</typeparam>
+        /// <param name="values">The values to be logged</param>
+        public static void Log<T>(ICollection<T> values)
         {
             Log(values, "", null, LogLevel.Info);
         }
 
+        /// <summary>
+        /// Logs the values on seperate lines with the default loglevel Info
+        /// </summary>
+        /// <typeparam name="T">The type of the values</typeparam>
+        /// <param name="values">The values to be logged</param>
+        /// <param name="title">The title to display above the logged values</param>
         public static void Log<T>(ICollection<T> values, string title)
         {
             Log(values, title, null, LogLevel.Info);
         }
 
+        /// <summary>
+        /// Logs the values on seperate lines with the default loglevel Info
+        /// </summary>
+        /// <typeparam name="T">The type of the values</typeparam>
+        /// <param name="values">The values to be logged</param>
+        /// <param name="title">The title to display above the logged values</param>
+        /// <param name="formatter">A formatter to use to display the values in a more readable format</param>
         public static void Log<T>(ICollection<T> values, string title, Func<T, string> formatter)
         {
             Log(values, title, formatter, LogLevel.Info);
         }
 
+        /// <summary>
+        /// Logs the values on seperate lines
+        /// </summary>
+        /// <typeparam name="T">The type of the values</typeparam>
+        /// <param name="values">The values to be logged</param>
+        /// <param name="title">The title to display above the logged values</param>
+        /// <param name="formatter">A formatter to use to display the values in a more readable format</param>
+        /// <param name="logLevel">The log level of the values</param>
         public static void Log<T>(ICollection<T> values, string title, Func<T, string>? formatter, LogLevel logLevel)
         {
             if (!string.IsNullOrEmpty(title)) Log(title, logLevel);
@@ -121,14 +170,14 @@ namespace Logbook
             {
                 if (value == null)
                 {
-                    Log("null", logLevel);
+                    Log(null, logLevel);
                     continue;
                 }
 
-                string message;
+                object message;
 
                 if (formatter != null) message = formatter(value);
-                else message = value.ToString() ?? "null";
+                else message = value;
 
                 Log(message, logLevel);
             }

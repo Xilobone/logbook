@@ -11,12 +11,16 @@ namespace Logbook.Controllers
     [Route("api/[controller]")]
     [Authorize]
     public class MeController : ControllerBase
-    {
+    {   
+        /// <summary>
+        /// Retuns some basic info about the authenticated user
+        /// </summary>
+        /// <returns>The users display name and principal name</returns>
         [HttpGet]
         public async Task<IActionResult> GetMe()
         {
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            var graphClient = GraphClient.GetByAccessCode(incomingToken);
+            var graphClient = ConfidentialClient.GetByAccessCode(incomingToken);
 
             var me = await graphClient.Me.GetAsync();
 
@@ -27,7 +31,7 @@ namespace Logbook.Controllers
         public async Task<IActionResult> GetMyFiles()
         {
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            var graphClient = GraphClient.GetByAccessCode(incomingToken);
+            var graphClient = ConfidentialClient.GetByAccessCode(incomingToken);
 
             // Get the default drive for the user
             var drive = await graphClient.Me.Drive.GetAsync();

@@ -37,6 +37,16 @@ namespace Logbook
             /// </summary>
             Critical
         }
+
+        private static Dictionary<LogLevel, ConsoleColor> consoleColors = new Dictionary<LogLevel, ConsoleColor>()
+{
+    { LogLevel.Trace, ConsoleColor.Gray },
+    { LogLevel.Debug, ConsoleColor.DarkGray },
+    { LogLevel.Info, ConsoleColor.White },
+    { LogLevel.Warning, ConsoleColor.Yellow },
+    { LogLevel.Error, ConsoleColor.Red },
+    { LogLevel.Critical, ConsoleColor.DarkRed }
+};
         private static Config? _config;
         private const string LINE_DELIMITER = "--------------------";
 
@@ -72,14 +82,19 @@ namespace Logbook
 
             string formatted = $"({DateTime.Now}|{logLevel}) {message}";
 
-            if (_config.writeToConsole) Console.WriteLine(formatted);
+            if (_config.writeToConsole)
+            {
+                Console.ForegroundColor = consoleColors[logLevel];
+                Console.WriteLine(formatted);
+                Console.ResetColor();
+            }
 
             if (_config.writeToFile)
-            {
-                StreamWriter writer = File.AppendText(_config.filePath);
-                writer.WriteLine(formatted);
-                writer.Close();
-            }
+                {
+                    StreamWriter writer = File.AppendText(_config.filePath);
+                    writer.WriteLine(formatted);
+                    writer.Close();
+                }
         }
 
         public static void Log<T>(ICollection<object> values)
@@ -92,12 +107,12 @@ namespace Logbook
             Log(values, title, null, LogLevel.Info);
         }
 
-        public static void Log<T>(ICollection<T> values, string title, Func<T,string> formatter)
+        public static void Log<T>(ICollection<T> values, string title, Func<T, string> formatter)
         {
             Log(values, title, formatter, LogLevel.Info);
         }
 
-        public static void Log<T>(ICollection<T> values, string title, Func<T,string>? formatter, LogLevel logLevel)
+        public static void Log<T>(ICollection<T> values, string title, Func<T, string>? formatter, LogLevel logLevel)
         {
             if (!string.IsNullOrEmpty(title)) Log(title, logLevel);
 
@@ -111,7 +126,7 @@ namespace Logbook
                 }
 
                 string message;
-                    
+
                 if (formatter != null) message = formatter(value);
                 else message = value.ToString() ?? "null";
 

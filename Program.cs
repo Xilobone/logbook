@@ -17,8 +17,9 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<LogbookDBContext>(options =>
     options.UseSqlite(builder.Configuration["DBConnectionString"]));
 
-
+//add logger
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
+
 ConfidentialClient.Initialize(builder.Configuration);
 
 var app = builder.Build();
@@ -27,4 +28,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+Logger.Log("Starting application");
 app.Run();

@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Sites.GetAllSites;
 using Logbook.Calendar;
+using Microsoft.Graph;
+using Logbook.Models;
+
 namespace Logbook.Controllers
 {
     [Authorize]
@@ -25,10 +28,10 @@ namespace Logbook.Controllers
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateCalendar([FromBody] CreateCalendarParams param)
-        {   
+        {
             //exchange token for a graph client
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            var graphClient = GraphClient.GetByAccessCode(incomingToken);
+            GraphServiceClient graphClient = GraphClient.GetByAccessCode(incomingToken);
 
             //download file
             Drive? driveItem = await graphClient.Me.Drive.WithUrl($"https://graph.microsoft.com/v1.0/me/drive/root:{param.path}").GetAsync();
@@ -43,12 +46,15 @@ namespace Logbook.Controllers
 
 
             using var stream = new MemoryStream(fileBytes);
-            List<CalendarEvent> events = CalendarEvent.CreateFromStream(stream);
+            List<Models.Event> events = CalendarManager.CreateEventsFromStream(stream);
 
-            foreach (CalendarEvent e in events)
-            {
-                Console.WriteLine($"({e.StartTime} - {e.EndTime}) {e.Title}");
-            }
+            CalendarManager calendarManager = new CalendarManager(graphClient);
+            string? calendarId = await calendarManager.GetOrCreateCalendar("Planning");
+
+            if (calendarId == null) throw new InvalidDataException("No calendar id was returned");
+
+            await calendarManager.UpdateCalendar(calendarId, events);
+
             return Ok(events.Count);
         }
 

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace Logbook.Models
-{   
+{
     /// <summary>
     /// Represents an event in a calendar
     /// </summary>
@@ -10,7 +10,7 @@ namespace Logbook.Models
         /// <summary>
         /// The id of the event
         /// </summary>
-        public Guid Id { get; set; } = Guid.Empty;
+        public string Id { get; set; } = string.Empty;
 
         /// <summary>
         /// The start date and time of the event
@@ -27,6 +27,10 @@ namespace Logbook.Models
         /// </summary>
         public string Title { get; set; } = string.Empty;
 
+        public override string ToString()
+        {
+            return $"({StartTime} - {EndTime}) {Title}";
+        }
         
     }
 }

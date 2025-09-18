@@ -16,8 +16,9 @@ public class MsalOnBehalfOfCredential : TokenCredential
         => GetTokenAsync(requestContext, cancellationToken).GetAwaiter().GetResult();
 
     public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
-    {   
+    {
         string[] graphScopes = new[] { "https://graph.microsoft.com/.default" };
+
         var result = await _app
             .AcquireTokenOnBehalfOf(graphScopes, new UserAssertion(_incomingToken))
             .ExecuteAsync(cancellationToken);

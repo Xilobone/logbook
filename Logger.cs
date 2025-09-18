@@ -38,6 +38,7 @@ namespace Logbook
             Critical
         }
         private static Config? _config;
+        private const string LINE_DELIMITER = "--------------------";
 
         public static void Initialize(IConfiguration configuration)
         {
@@ -81,6 +82,44 @@ namespace Logbook
             }
         }
 
+        public static void Log<T>(ICollection<object> values)
+        {
+            Log(values, "", null, LogLevel.Info);
+        }
+
+        public static void Log<T>(ICollection<T> values, string title)
+        {
+            Log(values, title, null, LogLevel.Info);
+        }
+
+        public static void Log<T>(ICollection<T> values, string title, Func<T,string> formatter)
+        {
+            Log(values, title, formatter, LogLevel.Info);
+        }
+
+        public static void Log<T>(ICollection<T> values, string title, Func<T,string>? formatter, LogLevel logLevel)
+        {
+            if (!string.IsNullOrEmpty(title)) Log(title, logLevel);
+
+            Log(LINE_DELIMITER, logLevel);
+            foreach (T value in values)
+            {
+                if (value == null)
+                {
+                    Log("null", logLevel);
+                    continue;
+                }
+
+                string message;
+                    
+                if (formatter != null) message = formatter(value);
+                else message = value.ToString() ?? "null";
+
+                Log(message, logLevel);
+            }
+            Log(LINE_DELIMITER, logLevel);
+
+        }
         /// <summary>
         /// Represents the configuration of the logger
         /// </summary>

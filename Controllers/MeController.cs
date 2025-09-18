@@ -1,3 +1,4 @@
+using logbook;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +21,7 @@ namespace Logbook.Controllers
         public async Task<IActionResult> GetMe()
         {
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            var graphClient = ConfidentialClient.GetByAccessCode(incomingToken);
+            var graphClient = GraphClient.GetByAccessCode(incomingToken);
 
             var me = await graphClient.Me.GetAsync();
 
@@ -31,7 +32,7 @@ namespace Logbook.Controllers
         public async Task<IActionResult> GetMyFiles()
         {
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            var graphClient = ConfidentialClient.GetByAccessCode(incomingToken);
+            var graphClient = GraphClient.GetByAccessCode(incomingToken);
 
             // Get the default drive for the user
             var drive = await graphClient.Me.Drive.GetAsync();

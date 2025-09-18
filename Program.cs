@@ -1,3 +1,4 @@
+using logbook;
 using Logbook;
 using Logbook.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,7 +21,7 @@ builder.Services.AddDbContext<LogbookDBContext>(options =>
 //add logger
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
 
-ConfidentialClient.Initialize(builder.Configuration);
+GraphClient.Initialize(builder.Configuration);
 
 var app = builder.Build();
 

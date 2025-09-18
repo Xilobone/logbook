@@ -7,6 +7,7 @@ using Logbook.Calendar;
 using Microsoft.Graph;
 using Logbook.Models;
 using System.Text.Json;
+using logbook;
 
 namespace Logbook.Controllers
 {
@@ -19,7 +20,7 @@ namespace Logbook.Controllers
         public async Task<IActionResult> GetCalendar()
         {
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            var graphClient = ConfidentialClient.GetByAccessCode(incomingToken);
+            var graphClient = GraphClient.GetByAccessCode(incomingToken);
 
             GetAllSitesGetResponse? response = await graphClient.Sites.GetAllSites.GetAsGetAllSitesGetResponseAsync();
 
@@ -32,7 +33,7 @@ namespace Logbook.Controllers
         {
             //exchange token for a graph client
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            GraphServiceClient graphClient = ConfidentialClient.GetByAccessCode(incomingToken);
+            GraphServiceClient graphClient = GraphClient.GetByAccessCode(incomingToken);
 
             //download file
             Drive? driveItem = await graphClient.Me.Drive.WithUrl($"https://graph.microsoft.com/v1.0/me/drive/root:{param.path}").GetAsync();
@@ -64,7 +65,7 @@ namespace Logbook.Controllers
         {
             //exchange token for a graph client
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            GraphServiceClient graphClient = ConfidentialClient.GetByAccessCode(incomingToken);
+            GraphServiceClient graphClient = GraphClient.GetByAccessCode(incomingToken);
 
             CalendarManager calendarManager = new CalendarManager(graphClient);
             string? calendarId = await calendarManager.GetOrCreateCalendar("Planning");

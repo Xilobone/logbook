@@ -27,6 +27,10 @@ namespace Logbook.Models
         /// </summary>
         public string Title { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Creates a string representation of the event
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return $"({StartTime} - {EndTime}) {Title}";

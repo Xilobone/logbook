@@ -5,12 +5,18 @@ using Microsoft.Graph.Models;
 using Graph = Microsoft.Graph.Models;
 
 namespace Logbook.Calendar
-{
+{   
+    /// <summary>
+    /// This class serves as a way to create and update calendars
+    /// </summary>
     public class CalendarManager
     {
-        const string SPELTAK = "Welpen";
-
         readonly GraphServiceClient _graphClient;
+
+        /// <summary>
+        /// Creates a new calendar manager, responsible for creating and updating calendars
+        /// </summary>
+        /// <param name="graphClient">The graph service client used for interacting with Microsoft Graph</param>
         public CalendarManager(GraphServiceClient graphClient)
         {
             _graphClient = graphClient;
@@ -23,20 +29,14 @@ namespace Logbook.Calendar
         /// <returns>The id of the calendar</returns>
         public async Task<string?> GetOrCreateCalendar(string name)
         {
-            //check if there is already a calendar with the given name
-            CalendarCollectionResponse? calendarResponse = await _graphClient.Me.Calendars.GetAsync();
-            if (calendarResponse == null || calendarResponse.Value == null) return null;
 
-            //select existing calendar with matching name
-            Graph.Calendar? existingCalendar = calendarResponse.Value
-                .Where(calendar => calendar.Name == name)
-                .FirstOrDefault();
+            //return existing calendar id if it was found
+            string? existingId = await GetCalendar(name);
 
-            //return if such a calendar is found
-            if (existingCalendar != null)
+            if (existingId != null)
             {
                 Logger.Log($"A calendar named {name} already exists, no new calendar is created");
-                return existingCalendar.Id;
+                return existingId;
             }
 
             //Create new calendar
@@ -48,6 +48,25 @@ namespace Logbook.Calendar
             if (addedCalendar == null) return null;
 
             return addedCalendar.Id;
+        }
+
+        /// <summary>
+        /// Gets the id of the calendar with the given name, if it exists
+        /// </summary>
+        /// <param name="name">The name of the calendar</param>
+        /// <returns>The id of the calendar, if it exists, null otherwise</returns>
+        public async Task<string?> GetCalendar(string name)
+        {
+            //get all calendars
+            CalendarCollectionResponse? calendarResponse = await _graphClient.Me.Calendars.GetAsync();
+            if (calendarResponse == null || calendarResponse.Value == null) return null;
+
+            //select existing calendar with matching name
+            Graph.Calendar? existingCalendar = calendarResponse.Value
+                .Where(calendar => calendar.Name == name)
+                .FirstOrDefault();
+
+            return existingCalendar != null ? existingCalendar.Id : null;
         }
 
         /// <summary>
@@ -65,7 +84,7 @@ namespace Logbook.Calendar
             // EventCollectionResponse? eventsResponse = await _graphClient.Me.Calendars[calendarId].Events.GetAsync();
             List<Models.Event> existingEvents = await calendar.GetAllEvents();
             Logger.Log(existingEvents, "All events currently in the agenda");
-            
+
             // if (eventsResponse == null || eventsResponse.Value == null) return;
 
             // Logger.Log(eventsResponse.Value, "All events currently in the agenda",
@@ -97,8 +116,6 @@ namespace Logbook.Calendar
                 // calendar.DeleteEvent(e.Id);
             }
         }
-
-        public static string ERROR_MESSAGE = "The provided stream does not contain a valid document";
 
         /// <summary>
         /// Creates a list of events based on the contents of a stream, stream must be a valid xlsx file

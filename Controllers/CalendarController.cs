@@ -5,9 +5,7 @@ using Microsoft.Graph.Models;
 using Microsoft.Graph.Sites.GetAllSites;
 using Logbook.Calendar;
 using Microsoft.Graph;
-using Logbook.Models;
-using System.Text.Json;
-using logbook;
+
 
 namespace Logbook.Controllers
 {
@@ -16,18 +14,13 @@ namespace Logbook.Controllers
     [Route("api/[controller]")]
     public class CalendarController : ControllerBase
     {
-        [HttpGet]
-        public async Task<IActionResult> GetCalendar()
-        {
-            var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            var graphClient = GraphClient.GetByAccessCode(incomingToken);
-
-            GetAllSitesGetResponse? response = await graphClient.Sites.GetAllSites.GetAsGetAllSitesGetResponseAsync();
-
-            return Ok(response);
-
-        }
-
+        
+        /// <summary>
+        /// Creates a calendar based on the contents in the provided file
+        /// </summary>
+        /// <param name="param">The parameters passed to the function, include the source file and an optional custom name</param>
+        /// <returns>A summary of the performed task</returns>
+        /// <exception cref="InvalidDataException">Thrown if no calendar was able to be created</exception>
         [HttpPost("create")]
         public async Task<IActionResult> CreateCalendar([FromBody] CreateCalendarParams param)
         {
@@ -42,16 +35,11 @@ namespace Logbook.Controllers
             using var httpClient = new HttpClient();
             var fileBytes = await httpClient.GetByteArrayAsync(downloadUrl);
 
-            // Save to disk
-            await System.IO.File.WriteAllBytesAsync("files/report.xlsx", fileBytes);
-            Console.WriteLine("File downloaded successfully.");
-
-
             using var stream = new MemoryStream(fileBytes);
             List<Models.Event> events = CalendarManager.CreateEventsFromStream(stream);
 
             CalendarManager calendarManager = new CalendarManager(graphClient);
-            string? calendarId = await calendarManager.GetOrCreateCalendar("Planning");
+            string? calendarId = await calendarManager.GetOrCreateCalendar(param.name);
 
             if (calendarId == null) throw new InvalidDataException("No calendar id was returned");
 
@@ -60,15 +48,20 @@ namespace Logbook.Controllers
             return Ok(events.Count);
         }
 
+        /// <summary>
+        /// Gets a list of all events currently in the calendar
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidDataException"></exception>
         [HttpGet("all")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] string name)
         {
             //exchange token for a graph client
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
             GraphServiceClient graphClient = GraphClient.GetByAccessCode(incomingToken);
 
             CalendarManager calendarManager = new CalendarManager(graphClient);
-            string? calendarId = await calendarManager.GetOrCreateCalendar("Planning");
+            string? calendarId = await calendarManager.GetOrCreateCalendar(name);
 
             if (calendarId == null) throw new InvalidDataException("No calendar id was returned");
 
@@ -78,16 +71,23 @@ namespace Logbook.Controllers
 
             var data = new
             {
-                Count = events.Count,
+                events.Count,
                 Data = events,
             };
-            // string json = JsonSerializer.Serialize(data);
             return Ok(data);
         }
 
         public class CreateCalendarParams
-        {
+        {   
+            /// <summary>
+            /// The path of the source file to create a parameter of
+            /// </summary>
             public string path { get; set; } = string.Empty;
+
+            /// <summary>
+            /// The name of the calendar to create, defaults to 'Planning'
+            /// </summary>
+            public string name { get; set; } = "Planning";
 
         }
 

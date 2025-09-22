@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
@@ -11,13 +12,23 @@ namespace Logbook.Calendar
         readonly string _id;
 
         const string SPELTAK = "Welpen";
+        public static string TIMEZONE = "UTC";
 
+        /// <summary>
+        /// Creates a new calendar object, all events in the calendar are fetched from Graph
+        /// </summary>
+        /// <param name="graphClient">The graph client to use to make requests to Microsoft Graph</param>
+        /// <param name="calendarId">The id of the corresponing calendar in outlook</param>
         public Calendar(GraphServiceClient graphClient, string calendarId)
         {
             _graphClient = graphClient;
             _id = calendarId;
         }
 
+        /// <summary>
+        /// Gets a list of all events that are currently in the calendar
+        /// </summary>
+        /// <returns>A list of all events in the calendar</returns>
         public async Task<List<Models.Event>> GetAllEvents()
         {
             List<Models.Event> events = new List<Models.Event>();
@@ -90,9 +101,17 @@ namespace Logbook.Calendar
             return;
         }
 
-        public string FindEventId(Models.Event evnt, List<Models.Event> events)
+        /// <summary>
+        /// Tries to find the id of the corresponing event in the list of events
+        /// </summary>
+        /// <param name="evnt">The event to search for</param>
+        /// <param name="events">The list of all events</param>
+        /// <returns>The id of the event if it was found, or null otherwise</returns>
+        public static string FindEventId(Models.Event evnt, List<Models.Event> events)
         {
             Logger.Log($"trying to find an event with name:{evnt.Title}", Logger.LogLevel.Warning);
+            Logger.Log($"trying to find an event with starttime:{evnt.StartTime}", Logger.LogLevel.Warning);
+            Logger.Log($"trying to find an event with endtime:{evnt.EndTime}", Logger.LogLevel.Warning);
             string? id = events
                 .Where(
                     e => e.StartTime.Equals(evnt.StartTime) &&
@@ -107,6 +126,7 @@ namespace Logbook.Calendar
         private Models.Event ToLogbookEvent(Graph.Event @event)
         {
             string title = @event.Subject != null ? @event.Subject.Replace($"Opkomst {SPELTAK}: ", "") : "";
+            
             return new Models.Event
             {
                 Id = @event.Id ?? string.Empty,
@@ -115,6 +135,7 @@ namespace Logbook.Calendar
                 Title = title
             };
         }
+
         private Graph.Event ToGraphEvent(Models.Event @event)
         {
             return new Event()
@@ -129,12 +150,12 @@ namespace Logbook.Calendar
                 {
                     // "o" indicates the right ISO standard
                     DateTime = @event.StartTime.ToString("o"),
-                    TimeZone = "UTC"
+                    TimeZone = TIMEZONE
                 },
                 End = new DateTimeTimeZone()
                 {
                     DateTime = @event.EndTime.ToString("o"),
-                    TimeZone = "UTC"
+                    TimeZone = TIMEZONE
                 }
             };
         }

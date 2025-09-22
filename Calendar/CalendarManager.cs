@@ -81,21 +81,16 @@ namespace Logbook.Calendar
 
             Calendar calendar = new Calendar(_graphClient, calendarId);
 
-            // EventCollectionResponse? eventsResponse = await _graphClient.Me.Calendars[calendarId].Events.GetAsync();
             List<Models.Event> existingEvents = await calendar.GetAllEvents();
             Logger.Log(existingEvents, "All events currently in the agenda");
 
-            // if (eventsResponse == null || eventsResponse.Value == null) return;
-
-            // Logger.Log(eventsResponse.Value, "All events currently in the agenda",
-            //     e => $"({e.Start!.DateTime} - {e.End!.DateTime}) {e.Subject}");
 
             List<Models.Event> deletedEvents = [.. existingEvents];
 
             foreach (Models.Event evnt in events)
             {
                 //check if event is already present, if so update if required, if not create event
-                string existingEventId = calendar.FindEventId(evnt, existingEvents);
+                string existingEventId = Calendar.FindEventId(evnt, existingEvents);
                 string id;
                 if (string.IsNullOrEmpty(existingEventId))
                 {
@@ -135,9 +130,10 @@ namespace Logbook.Calendar
                 {
 
                     if (row[0] is DateTime dateTime)
-                    {
-                        DateTime startTime = dateTime.AddHours(10);
-                        DateTime endTime = dateTime.AddHours(12);
+                    {   
+                        //Start and endtime in utc
+                        DateTime startTime = dateTime.AddHours(8);
+                        DateTime endTime = dateTime.AddHours(10);
 
                         string description = row[1].ToString() ?? "No title";
 

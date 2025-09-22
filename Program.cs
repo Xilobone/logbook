@@ -1,3 +1,4 @@
+using System.Globalization;
 using logbook;
 using Logbook;
 using Logbook.Data;
@@ -7,6 +8,7 @@ using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
+Logbook.Calendar.Calendar.TIMEZONE = builder.Configuration["TimeZone"]!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("IdentityProvider"));
 

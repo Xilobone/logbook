@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Graph = Microsoft.Graph.Models;
@@ -12,17 +13,19 @@ namespace Logbook.Calendar
         readonly string _id;
 
         const string SPELTAK = "Welpen";
-        public static string TIMEZONE = "UTC";
+
+        readonly CalendarConfig _config;
 
         /// <summary>
         /// Creates a new calendar object, all events in the calendar are fetched from Graph
         /// </summary>
         /// <param name="graphClient">The graph client to use to make requests to Microsoft Graph</param>
         /// <param name="calendarId">The id of the corresponing calendar in outlook</param>
-        public Calendar(GraphServiceClient graphClient, string calendarId)
+        public Calendar(CalendarConfig config, GraphServiceClient graphClient, string calendarId)
         {
             _graphClient = graphClient;
             _id = calendarId;
+            _config = config;
         }
 
         /// <summary>
@@ -126,12 +129,12 @@ namespace Logbook.Calendar
         private Models.Event ToLogbookEvent(Graph.Event @event)
         {
             string title = @event.Subject != null ? @event.Subject.Replace($"Opkomst {SPELTAK}: ", "") : "";
-            
+            //convert time to utc
             return new Models.Event
             {
                 Id = @event.Id ?? string.Empty,
-                StartTime = DateTime.Parse(@event.Start!.DateTime!),
-                EndTime = DateTime.Parse(@event.End!.DateTime!),
+                StartTime = ToUtc(@event.Start!),
+                EndTime = ToUtc(@event.End!),
                 Title = title
             };
         }
@@ -150,14 +153,32 @@ namespace Logbook.Calendar
                 {
                     // "o" indicates the right ISO standard
                     DateTime = @event.StartTime.ToString("o"),
-                    TimeZone = TIMEZONE
+                    TimeZone = "UTC"
                 },
                 End = new DateTimeTimeZone()
                 {
                     DateTime = @event.EndTime.ToString("o"),
-                    TimeZone = TIMEZONE
+                    TimeZone = "UTC"
                 }
             };
         }
+
+    static DateTime ToUtc(DateTimeTimeZone dateTimeTimeZone)
+    {
+        if (dateTimeTimeZone == null)
+            throw new ArgumentNullException(nameof(dateTimeTimeZone));
+
+        // 1. Parse the string into a DateTime
+        DateTime parsed = DateTime.Parse(dateTimeTimeZone.DateTime!);
+
+        // 2. Ensure it's treated as "Unspecified"
+        DateTime localTime = DateTime.SpecifyKind(parsed, DateTimeKind.Unspecified);
+
+        // 3. Get the TimeZoneInfo
+        TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(dateTimeTimeZone.TimeZone!);
+
+        // 4. Convert to UTC
+        return TimeZoneInfo.ConvertTimeToUtc(localTime, tz);
+    }
     }
 }

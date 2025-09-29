@@ -8,17 +8,27 @@ using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Logbook.Calendar.Calendar.TIMEZONE = builder.Configuration["TimeZone"]!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("IdentityProvider"));
 
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
+builder.Services.Configure<CalendarConfig>(builder.Configuration.GetSection("CalendarConfig"));
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
-builder.Services.AddDbContext<LogbookDBContext>(options =>
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDbContext<LogbookDBContext>(options =>
     options.UseSqlite(builder.Configuration["DBConnectionString"]));
+}
+else
+{
+    builder.Services.AddDbContext<LogbookDBContext>(options =>
+    options.UseMySql(builder.Configuration["DBConnectionString"], new MariaDbServerVersion(new Version(10, 11, 14))));
+}
+
 
 //add logger
 Logger.Initialize(builder.Configuration.GetSection("Logger"));

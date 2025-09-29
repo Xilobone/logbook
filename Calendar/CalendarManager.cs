@@ -5,21 +5,23 @@ using Microsoft.Graph.Models;
 using Graph = Microsoft.Graph.Models;
 
 namespace Logbook.Calendar
-{   
+{
     /// <summary>
     /// This class serves as a way to create and update calendars
     /// </summary>
     public class CalendarManager
     {
         readonly GraphServiceClient _graphClient;
+        readonly CalendarConfig _config;
 
         /// <summary>
         /// Creates a new calendar manager, responsible for creating and updating calendars
         /// </summary>
         /// <param name="graphClient">The graph service client used for interacting with Microsoft Graph</param>
-        public CalendarManager(GraphServiceClient graphClient)
+        public CalendarManager(CalendarConfig config, GraphServiceClient graphClient)
         {
             _graphClient = graphClient;
+            _config = config;
         }
 
         /// <summary>
@@ -79,7 +81,7 @@ namespace Logbook.Calendar
         {
             Logger.Log(events, "All events obtained from the document");
 
-            Calendar calendar = new Calendar(_graphClient, calendarId);
+            Calendar calendar = new Calendar(_config, _graphClient, calendarId);
 
             List<Models.Event> existingEvents = await calendar.GetAllEvents();
             Logger.Log(existingEvents, "All events currently in the agenda");
@@ -117,7 +119,7 @@ namespace Logbook.Calendar
         /// </summary>
         /// <param name="stream">The memorystream to read from</param>
         /// <returns>A list of calendar events</returns>
-        public static List<Models.Event> CreateEventsFromStream(MemoryStream stream)
+        public List<Models.Event> CreateEventsFromStream(MemoryStream stream)
         {
             List<Models.Event> events = new List<Models.Event>();
 
@@ -130,10 +132,10 @@ namespace Logbook.Calendar
                 {
 
                     if (row[0] is DateTime dateTime)
-                    {   
+                    {
                         //Start and endtime in utc
-                        DateTime startTime = dateTime.AddHours(8);
-                        DateTime endTime = dateTime.AddHours(10);
+                        DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(_config.StartTime), TimeZoneInfo.FindSystemTimeZoneById(_config.TimeZone));
+                        DateTime endTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(_config.EndTime), TimeZoneInfo.FindSystemTimeZoneById(_config.TimeZone));
 
                         string description = row[1].ToString() ?? "No title";
 

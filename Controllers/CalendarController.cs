@@ -5,6 +5,7 @@ using Microsoft.Graph.Models;
 using Microsoft.Graph.Sites.GetAllSites;
 using Logbook.Calendar;
 using Microsoft.Graph;
+using Microsoft.Extensions.Options;
 
 
 namespace Logbook.Controllers
@@ -14,7 +15,12 @@ namespace Logbook.Controllers
     [Route("api/[controller]")]
     public class CalendarController : ControllerBase
     {
-        
+        readonly CalendarConfig _config;
+        public CalendarController(IOptions<CalendarConfig> config)
+        {
+            _config = config.Value;
+        }
+
         /// <summary>
         /// Creates a calendar based on the contents in the provided file
         /// </summary>
@@ -35,10 +41,11 @@ namespace Logbook.Controllers
             using var httpClient = new HttpClient();
             var fileBytes = await httpClient.GetByteArrayAsync(downloadUrl);
 
-            using var stream = new MemoryStream(fileBytes);
-            List<Models.Event> events = CalendarManager.CreateEventsFromStream(stream);
+            CalendarManager calendarManager = new CalendarManager(_config, graphClient);
 
-            CalendarManager calendarManager = new CalendarManager(graphClient);
+            using var stream = new MemoryStream(fileBytes);
+            List<Models.Event> events = calendarManager.CreateEventsFromStream(stream);
+
             string? calendarId = await calendarManager.GetOrCreateCalendar(param.name);
 
             if (calendarId == null) throw new InvalidDataException("No calendar id was returned");
@@ -60,12 +67,12 @@ namespace Logbook.Controllers
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
             GraphServiceClient graphClient = GraphClient.GetByAccessCode(incomingToken);
 
-            CalendarManager calendarManager = new CalendarManager(graphClient);
+            CalendarManager calendarManager = new CalendarManager(_config,graphClient);
             string? calendarId = await calendarManager.GetOrCreateCalendar(name);
 
             if (calendarId == null) throw new InvalidDataException("No calendar id was returned");
 
-            Calendar.Calendar calendar = new Logbook.Calendar.Calendar(graphClient, calendarId);
+            Calendar.Calendar calendar = new Logbook.Calendar.Calendar(_config, graphClient, calendarId);
 
             List<Models.Event> events = await calendar.GetAllEvents();
 

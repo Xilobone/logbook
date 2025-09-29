@@ -9,13 +9,21 @@ using Microsoft.Extensions.Options;
 
 
 namespace Logbook.Controllers
-{
+{   
+    /// <summary>
+    /// Handles api requests about the users calendar
+    /// </summary>
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class CalendarController : ControllerBase
     {
         readonly CalendarConfig _config;
+
+        /// <summary>
+        /// Creates a new calendar controller
+        /// </summary>
+        /// <param name="config">The calendar configuration to use for this controller</param>
         public CalendarController(IOptions<CalendarConfig> config)
         {
             _config = config.Value;
@@ -72,7 +80,7 @@ namespace Logbook.Controllers
 
             if (calendarId == null) throw new InvalidDataException("No calendar id was returned");
 
-            Calendar.Calendar calendar = new Logbook.Calendar.Calendar(_config, graphClient, calendarId);
+            Calendar.Calendar calendar = new Logbook.Calendar.Calendar(graphClient, calendarId);
 
             List<Models.Event> events = await calendar.GetAllEvents();
 
@@ -84,8 +92,11 @@ namespace Logbook.Controllers
             return Ok(data);
         }
 
+        /// <summary>
+        /// Parameters that can be passed to the create endpoint
+        /// </summary>
         public class CreateCalendarParams
-        {   
+        {
             /// <summary>
             /// The path of the source file to create a parameter of
             /// </summary>

@@ -1,12 +1,12 @@
-using System.Globalization;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Graph = Microsoft.Graph.Models;
 
 namespace Logbook.Calendar
-{
+{   
+    /// <summary>
+    /// Represents a users outlook calendar, all mutations on this calendar are directly applied to their calendar
+    /// </summary>
     public class Calendar
     {
         readonly GraphServiceClient _graphClient;
@@ -14,18 +14,16 @@ namespace Logbook.Calendar
 
         const string SPELTAK = "Welpen";
 
-        readonly CalendarConfig _config;
 
         /// <summary>
         /// Creates a new calendar object, all events in the calendar are fetched from Graph
         /// </summary>
         /// <param name="graphClient">The graph client to use to make requests to Microsoft Graph</param>
         /// <param name="calendarId">The id of the corresponing calendar in outlook</param>
-        public Calendar(CalendarConfig config, GraphServiceClient graphClient, string calendarId)
+        public Calendar(GraphServiceClient graphClient, string calendarId)
         {
             _graphClient = graphClient;
             _id = calendarId;
-            _config = config;
         }
 
         /// <summary>
@@ -86,6 +84,12 @@ namespace Logbook.Calendar
             return createdEvent.Id!;
         }
 
+        /// <summary>
+        /// Updates an existing event with new details
+        /// </summary>
+        /// <param name="event">The updated event info</param>
+        /// <param name="eventId">The id of the existing event</param>
+        /// <returns></returns>
         public async Task<string> UpdateEvent(Models.Event @event, string eventId)
         {
             Graph.Event e = ToGraphEvent(@event);
@@ -97,6 +101,10 @@ namespace Logbook.Calendar
             return updatedEvent.Id!;
         }
 
+        /// <summary>
+        /// Deletes an event from the calendar
+        /// </summary>
+        /// <param name="eventId">The id of the event to remove</param>
         public async void DeleteEvent(string eventId)
         {
             await _graphClient.Me.Calendars[_id].Events[eventId].DeleteAsync();
@@ -163,22 +171,22 @@ namespace Logbook.Calendar
             };
         }
 
-    static DateTime ToUtc(DateTimeTimeZone dateTimeTimeZone)
-    {
-        if (dateTimeTimeZone == null)
-            throw new ArgumentNullException(nameof(dateTimeTimeZone));
+        static DateTime ToUtc(DateTimeTimeZone dateTimeTimeZone)
+        {
+            if (dateTimeTimeZone == null)
+                throw new ArgumentNullException(nameof(dateTimeTimeZone));
 
-        // 1. Parse the string into a DateTime
-        DateTime parsed = DateTime.Parse(dateTimeTimeZone.DateTime!);
+            // 1. Parse the string into a DateTime
+            DateTime parsed = DateTime.Parse(dateTimeTimeZone.DateTime!);
 
-        // 2. Ensure it's treated as "Unspecified"
-        DateTime localTime = DateTime.SpecifyKind(parsed, DateTimeKind.Unspecified);
+            // 2. Ensure it's treated as "Unspecified"
+            DateTime localTime = DateTime.SpecifyKind(parsed, DateTimeKind.Unspecified);
 
-        // 3. Get the TimeZoneInfo
-        TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(dateTimeTimeZone.TimeZone!);
+            // 3. Get the TimeZoneInfo
+            TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(dateTimeTimeZone.TimeZone!);
 
-        // 4. Convert to UTC
-        return TimeZoneInfo.ConvertTimeToUtc(localTime, tz);
-    }
+            // 4. Convert to UTC
+            return TimeZoneInfo.ConvertTimeToUtc(localTime, tz);
+        }
     }
 }

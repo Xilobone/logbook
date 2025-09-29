@@ -17,6 +17,7 @@ namespace Logbook.Calendar
         /// <summary>
         /// Creates a new calendar manager, responsible for creating and updating calendars
         /// </summary>
+        /// <param name="config">The calendar configuration to use</param>
         /// <param name="graphClient">The graph service client used for interacting with Microsoft Graph</param>
         public CalendarManager(CalendarConfig config, GraphServiceClient graphClient)
         {
@@ -81,7 +82,7 @@ namespace Logbook.Calendar
         {
             Logger.Log(events, "All events obtained from the document");
 
-            Calendar calendar = new Calendar(_config, _graphClient, calendarId);
+            Calendar calendar = new Calendar(_graphClient, calendarId);
 
             List<Models.Event> existingEvents = await calendar.GetAllEvents();
             Logger.Log(existingEvents, "All events currently in the agenda");

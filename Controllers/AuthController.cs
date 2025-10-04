@@ -4,15 +4,24 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Client;
 
 namespace Logbook.Controllers
-{
+{   
+    /// <summary>
+    /// Api endpoint that handles authentication with the identity provider, is the only enpoint that
+    /// is not protected behind authentication (as it would otherwise be inpossible to authenticate)
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
         IConfiguration _configuration;
         IConfidentialClientApplication _clientApplication;
-        LogbookDBContext _context;
+        readonly LogbookDBContext _context;
 
+        /// <summary>
+        /// Creates a new authentication controller
+        /// </summary>
+        /// <param name="context">The database context to use</param>
+        /// <param name="configuration">The configuration to use</param>
         public AuthController(LogbookDBContext context, IConfiguration configuration)
         {
             _context = context;

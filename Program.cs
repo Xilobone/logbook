@@ -1,5 +1,3 @@
-using System.Globalization;
-using logbook;
 using Logbook;
 using Logbook.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -17,6 +15,18 @@ builder.Services.Configure<CalendarConfig>(builder.Configuration.GetSection("Cal
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontEnd-DEV",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:5051")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 
 if (builder.Environment.IsDevelopment())
 {
@@ -39,6 +49,8 @@ var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseCors("FrontEnd-DEV");
 
 app.MapControllers();
 

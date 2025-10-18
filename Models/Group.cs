@@ -30,6 +30,11 @@ namespace Logbook.Models
         public TimeOnly EndTime { get; set; } = TimeOnly.MaxValue;
 
         /// <summary>
+        /// The timezone the calendar events should be in
+        /// </summary>
+        public string TimeZone { get; set; } = string.Empty;
+
+        /// <summary>
         /// A collection of all users in this group
         /// </summary>
         public virtual ICollection<User> Users { get; set; } = new List<User>();

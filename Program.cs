@@ -45,7 +45,6 @@ else
 
 //add logger
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
-Logger.Log($"Starting Logbook in {builder.Environment.EnvironmentName}");
 GraphClient.Initialize(builder.Configuration);
 
 var app = builder.Build();

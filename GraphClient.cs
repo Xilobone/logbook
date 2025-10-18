@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 
@@ -49,6 +50,23 @@ namespace Logbook
             var credential = new MSALOnBehalfOfCredential(ConfidentialClient, incomingToken!);
 
             return new GraphServiceClient(credential);
+        }
+
+        /// <summary>
+        /// Gets the entra id of the user that provided the token
+        /// </summary>
+        /// <param name="incomingToken">The incoming token provided</param>
+        /// <returns>The entra id of the user</returns>
+        public static Guid GetUserEntraId(string incomingToken)
+        {
+            var graphClient = GetByAccessCode(incomingToken);
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(incomingToken);
+            string? oid = jwt.Claims.FirstOrDefault(c => c.Type == "oid")?.Value;
+            Guid entraId = Guid.Parse(oid!);
+
+            return entraId;
         }
     }
 }

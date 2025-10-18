@@ -31,18 +31,21 @@ builder.Services.AddCors(options =>
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<LogbookDBContext>(options =>
-    options.UseSqlite(builder.Configuration["DBConnectionString"]));
+    
+        options.UseSqlite(builder.Configuration["DBConnectionString"])
+        .UseLazyLoadingProxies());
 }
 else
 {
     builder.Services.AddDbContext<LogbookDBContext>(options =>
-    options.UseMySql(builder.Configuration["DBConnectionString"], new MariaDbServerVersion(new Version(10, 11, 14))));
+    options.UseMySql(builder.Configuration["DBConnectionString"], new MariaDbServerVersion(new Version(10, 11, 14)))
+    .UseLazyLoadingProxies());
 }
 
 
 //add logger
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
-
+Logger.Log($"Starting Logbook in {builder.Environment.EnvironmentName}");
 GraphClient.Initialize(builder.Configuration);
 
 var app = builder.Build();

@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace logbook.Migrations
 {
     [DbContext(typeof(LogbookDBContext))]
-    [Migration("20250913154348_NotRequireId")]
-    partial class NotRequireId
+    [Migration("20251018154813_EntraIdOnGroup")]
+    partial class EntraIdOnGroup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,10 +20,24 @@ namespace logbook.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
 
+            modelBuilder.Entity("GroupUser", b =>
+                {
+                    b.Property<Guid>("GroupsId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UsersId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("GroupsId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("GroupUser");
+                });
+
             modelBuilder.Entity("Logbook.Models.Event", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("EndTime")
@@ -45,6 +59,9 @@ namespace logbook.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EntraId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -74,25 +91,22 @@ namespace logbook.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GroupId");
-
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Logbook.Models.User", b =>
+            modelBuilder.Entity("GroupUser", b =>
                 {
-                    b.HasOne("Logbook.Models.Group", "Group")
-                        .WithMany("Users")
-                        .HasForeignKey("GroupId")
+                    b.HasOne("Logbook.Models.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Group");
-                });
-
-            modelBuilder.Entity("Logbook.Models.Group", b =>
-                {
-                    b.Navigation("Users");
+                    b.HasOne("Logbook.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

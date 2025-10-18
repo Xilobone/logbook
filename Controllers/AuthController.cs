@@ -90,7 +90,6 @@ namespace Logbook.Controllers
                 {
                     UserName = result.Account.Username,
                     EntraId = id,
-                    GroupId = authState.GroupId
                 };
 
                 _context.Users.Add(user);

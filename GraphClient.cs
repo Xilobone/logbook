@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using Logbook.Data;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 
@@ -8,7 +9,7 @@ namespace Logbook
     /// Used to obtain a graph service client that can query data from Microsoft Graph
     /// </summary>
     public class GraphClient
-    {   
+    {
         static IConfidentialClientApplication ConfidentialClient
         {
             get
@@ -59,8 +60,6 @@ namespace Logbook
         /// <returns>The entra id of the user</returns>
         public static Guid GetUserEntraId(string incomingToken)
         {
-            var graphClient = GetByAccessCode(incomingToken);
-
             var handler = new JwtSecurityTokenHandler();
             var jwt = handler.ReadJwtToken(incomingToken);
             string? oid = jwt.Claims.FirstOrDefault(c => c.Type == "oid")?.Value;

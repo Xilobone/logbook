@@ -1,3 +1,4 @@
+using Logbook.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +25,7 @@ namespace Logbook.Controllers
 
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
             var graphClient = GraphClient.GetByAccessCode(incomingToken);
+            Logger.Log("Created graph client");
 
             User? me = await graphClient.Me.GetAsync();
             DirectoryObjectCollectionResponse? memberOf = await graphClient.Me.MemberOf.GetAsync();

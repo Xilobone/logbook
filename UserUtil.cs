@@ -1,11 +1,20 @@
 using Logbook.Data;
 using Graph = Microsoft.Graph.Models;
 using Microsoft.AspNetCore.Authentication;
-using System.IdentityModel.Tokens.Jwt;
 namespace Logbook.Util
-{
+{   
+    /// <summary>
+    /// Class containing util functions regarding users
+    /// </summary>
     public class User
-    {
+    {   
+        /// <summary>
+        /// Gets the stored user info that made the request, or gets the info from graph and inserts
+        /// it into the database if it doesnt exist yet
+        /// </summary>
+        /// <param name="httpContext">The http request context</param>
+        /// <param name="_context">The database context</param>
+        /// <returns></returns>
         public static async Task<Models.User?> GetOrCreate(HttpContext httpContext, LogbookDBContext _context)
         {
             var incomingToken = await httpContext.GetTokenAsync("access_token");

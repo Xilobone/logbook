@@ -1,6 +1,5 @@
 using Azure.Core;
 using Microsoft.Identity.Client;
-
 /// <summary>
 /// Responsible for handling the requesting of access tokens to Microsoft Graph on behalf of the user (OBO)
 /// </summary>
@@ -44,6 +43,8 @@ public class MSALOnBehalfOfCredential : TokenCredential
         var result = await _app
             .AcquireTokenOnBehalfOf(graphScopes, new UserAssertion(_incomingToken))
             .ExecuteAsync(cancellationToken);
+
+        // var result = await _app.AcquireTokenByAuthorizationCode(graphScopes, _incomingToken).ExecuteAsync();
 
         return new AccessToken(result.AccessToken, result.ExpiresOn);
     }

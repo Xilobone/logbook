@@ -26,16 +26,37 @@ namespace Logbook
             }
         }
 
+        public static IConfidentialClientApplication ClientApp
+        {
+            get
+            {
+                if (_clientApp != null) return _clientApp;
+                if (_config == null) throw new InvalidOperationException("Config must be initialized");
+
+                _clientApp = ConfidentialClientApplicationBuilder.Create(_config["IdentityProvider:ClientId"])
+                        .WithClientSecret(_config["IdentityProvider:ClientSecret"])
+                        .WithRedirectUri(_config["IdentityProvider:RedirectUri"])
+                        .WithAuthority(new Uri($"https://login.microsoftonline.com/{_config["IdentityProvider:TenantId"]}/v2.0"))
+                        .Build();
+
+                return _clientApp;
+            }
+        }
+
+        static IConfidentialClientApplication? _clientApp;
         private static IConfidentialClientApplication? _instance;
         private static IConfiguration? _config;
+
+        public static IServiceProvider? _serviceProvider;
 
         /// <summary>
         /// Initializes the confidential client, must be called before the client can be used
         /// </summary>
         /// <param name="config"></param>
-        public static void Initialize(IConfiguration config)
+        public static void Initialize(IConfiguration config, IServiceProvider serviceProvider)
         {
             _config = config;
+            _serviceProvider = serviceProvider;
         }
 
         /// <summary>
@@ -49,6 +70,10 @@ namespace Logbook
             if (incomingToken == null) throw new NullReferenceException("No incoming token was provided");
 
             var credential = new MSALOnBehalfOfCredential(ConfidentialClient, incomingToken!);
+
+            // var tokenCache = new PersistentTokenCache(_serviceProvider, GetUserEntraId(incomingToken).ToString());
+            // tokenCache.Enable(ConfidentialClient.UserTokenCache);
+            // tokenCache.Enable(ClientApp.UserTokenCache);
 
             return new GraphServiceClient(credential);
         }

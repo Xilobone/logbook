@@ -42,10 +42,23 @@ else
     .UseLazyLoadingProxies());
 }
 
+// builder.Services.AddScoped<GraphClient>();
 
 //add logger
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
-GraphClient.Initialize(builder.Configuration);
+
+
+// Create a scope to resolve scoped services at startup
+// using (var scope = app.Services.CreateScope())
+// {
+//     var dbContext = scope.ServiceProvider.GetRequiredService<LogbookDBContext>();
+
+//     // Pass both configuration and DbContext to your static initializer
+// }
+
+    GraphClient.Initialize(builder.Configuration, builder.Services.BuildServiceProvider());
+
+// GraphClient.Initialize(builder.Configuration);
 
 var app = builder.Build();
 

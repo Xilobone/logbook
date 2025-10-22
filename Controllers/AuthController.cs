@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Client;
 
 namespace Logbook.Controllers
-{   
+{
     /// <summary>
     /// Api endpoint that handles authentication with the identity provider, is the only enpoint that
     /// is not protected behind authentication (as it would otherwise be inpossible to authenticate)
@@ -14,7 +14,6 @@ namespace Logbook.Controllers
     public class AuthController : ControllerBase
     {
         IConfiguration _configuration;
-        IConfidentialClientApplication _clientApplication;
         readonly LogbookDBContext _context;
 
         /// <summary>
@@ -27,11 +26,11 @@ namespace Logbook.Controllers
             _context = context;
             _configuration = configuration;
 
-            _clientApplication = ConfidentialClientApplicationBuilder.Create(_configuration["IdentityProvider:ClientId"])
-                .WithClientSecret(_configuration["IdentityProvider:ClientSecret"])
-                .WithRedirectUri(_configuration["IdentityProvider:RedirectUri"])
-                .WithAuthority(new Uri($"https://login.microsoftonline.com/{_configuration["IdentityProvider:TenantId"]}/v2.0"))
-                .Build();
+            // _clientApplication = ConfidentialClientApplicationBuilder.Create(_configuration["IdentityProvider:ClientId"])
+            //     .WithClientSecret(_configuration["IdentityProvider:ClientSecret"])
+            //     .WithRedirectUri(_configuration["IdentityProvider:RedirectUri"])
+            //     .WithAuthority(new Uri($"https://login.microsoftonline.com/{_configuration["IdentityProvider:TenantId"]}/v2.0"))
+            //     .Build();
         }
 
         /// <summary>
@@ -48,7 +47,7 @@ namespace Logbook.Controllers
                 + "&response_type=code"
                 + $"&redirect_uri={_configuration["IdentityProvider:RedirectUri"]}"
                 + "&response_mode=query"
-                + $"&scope=api://{_configuration["AzureAd:ClientId"]}/.default"
+                + $"&scope=offline_access api://{_configuration["AzureAd:ClientId"]}/access_as_user"
                 + $"&state=1234";
 
             return Redirect(uri);
@@ -64,10 +63,15 @@ namespace Logbook.Controllers
         [HttpGet("redirect")]
         public async Task<IActionResult> Exchange([FromQuery] string code, string state)
         {
-            string[] scopes = new[] { $"api://{_configuration["AzureAd:ClientId"]}/.default" };
+            string[] scopes = new[] { "offline_access", $"api://{_configuration["AzureAd:ClientId"]}/access_as_user" };
+
+            var tokenCache = new PersistentTokenCache(_context);
+            tokenCache.Enable(GraphClient.ClientApp.UserTokenCache);
 
             // Exchange authorization code for token
-            var result = await _clientApplication.AcquireTokenByAuthorizationCode(scopes, code).ExecuteAsync();
+            var result = await GraphClient.ClientApp.AcquireTokenByAuthorizationCode(scopes, code).ExecuteAsync();
+
+            tokenCache.SetUserId(result.Account.HomeAccountId.Identifier);
 
             Guid id = Guid.Parse(result.UniqueId);
 

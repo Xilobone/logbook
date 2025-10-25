@@ -70,6 +70,8 @@ namespace Logbook.Controllers
 
             // Exchange authorization code for token
             var result = await GraphClient.ClientApp.AcquireTokenByAuthorizationCode(scopes, code).ExecuteAsync();
+            Logger.Log("the other");
+            
 
             tokenCache.SetUserId(result.Account.HomeAccountId.Identifier);
 

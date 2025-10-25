@@ -1,3 +1,4 @@
+using ExcelDataReader.Log;
 using Logbook;
 using Logbook.Data;
 using Microsoft.Identity.Client;
@@ -26,7 +27,14 @@ public class PersistentTokenCache
 
     public void SetUserId(string userId)
     {
-        if (entry == null) return;
+        Logger.Log($"setting user id to {userId}");
+        _userId = userId;
+
+        if (entry == null)
+        {
+            Logger.Log("entry is null");
+            return;
+        }
 
         entry.UserId = userId;
         _context.SaveChanges();
@@ -35,10 +43,15 @@ public class PersistentTokenCache
     private void BeforeAccessNotification(TokenCacheNotificationArgs args)
     {
         Logger.Log("before");
+        Logger.Log($"looking for entry for user with id {_userId}", Logger.LogLevel.Warning);
 
         entry = _context.TokenCaches.FirstOrDefault(t => t.UserId == _userId);
+
+        if (entry != null) Logger.Log("entry found");
+
         if (entry?.CacheData != null)
         {
+            Logger.Log("entry has cached data");            
             args.TokenCache.DeserializeMsalV3(entry.CacheData);
         }
     }
@@ -47,7 +60,11 @@ public class PersistentTokenCache
     {
         Logger.Log("after");
 
-        if (!args.HasStateChanged) return;
+        if (!args.HasStateChanged)
+        {
+            Logger.Log("state hasnt changed, exiting after");
+            return;
+        }
 
 
         entry = _context.TokenCaches.FirstOrDefault(t => t.UserId == _userId);
@@ -60,5 +77,7 @@ public class PersistentTokenCache
         entry.CacheData = args.TokenCache.SerializeMsalV3();
         entry.LastUpdated = DateTime.UtcNow;
         // _context.SaveChanges();
+
+        Logger.Log("after has finished");
     }
 }

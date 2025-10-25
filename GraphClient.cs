@@ -1,7 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
+using Azure.Identity;
 using Logbook.Data;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
+using Microsoft.Kiota.Abstractions.Authentication;
 
 namespace Logbook
 {
@@ -92,5 +94,65 @@ namespace Logbook
 
             return entraId;
         }
+
+        public static async Task<GraphServiceClient> GetGraphClientForUserAsync(LogbookDBContext context, string userId)
+        {
+            // 1️⃣ Get the shared ConfidentialClient
+            var app = GraphClient.ClientApp;
+
+            // 2️⃣ Attach the user's token cache from DB
+            var tokenCache = new PersistentTokenCache(context);
+            Logger.Log("1");
+            tokenCache.SetUserId(userId);
+            tokenCache.Enable(app.UserTokenCache);
+
+            var account = await app.GetAccountAsync(userId);
+
+            // 3️⃣ Acquire token silently using the user's account info
+            var accounts = await app.GetAccountsAsync();
+            // var account = accounts.FirstOrDefault(a => a.HomeAccountId.Identifier == userId);
+
+            if (account == null)
+                throw new Exception($"No account found in cache for user {userId}");
+
+            // var result = await app.AcquireTokenSilent(
+            //     new[] { "https://graph.microsoft.com/.default" },
+            //     account
+            // ).ExecuteAsync();
+
+            Logger.Log("going great");
+            // 4️⃣ Create Graph client with this token
+            // var credential = new OnBehalfOfCredential(_config["AzureAd:TentantId"], _config["AzureAd:ClientId"], _config["AzureAd:ClientSecret"], result.AccessToken);
+
+            // var credential = new MSALOnBehalfOfCredential(app, userId);
+            // Logger.Log("created credential");
+            // var graphClient = new GraphServiceClient(credential);
+            var scopes = new[] { "https://graph.microsoft.com/.default" };
+            var result = await app.AcquireTokenSilent(scopes, account).ExecuteAsync();
+
+            // Create an authentication provider manually
+            var authProvider = new BaseBearerTokenAuthenticationProvider(new SimpleAccessTokenProvider(result.AccessToken));
+
+            // Create the GraphServiceClient
+            var graphClient = new GraphServiceClient(authProvider);
+            return graphClient;
+        }
+
+    }
+
+    internal class SimpleAccessTokenProvider : IAccessTokenProvider
+    {
+        private readonly string _token;
+        public SimpleAccessTokenProvider(string token) => _token = token;
+
+        public Task<string> GetAuthorizationTokenAsync(
+            Uri uri,
+            Dictionary<string, object> additionalAuthenticationContext = default,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_token);
+        }
+
+        public AllowedHostsValidator AllowedHostsValidator { get; } = new();
     }
 }

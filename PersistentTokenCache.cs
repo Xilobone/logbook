@@ -11,7 +11,7 @@ public class PersistentTokenCache
     private readonly LogbookDBContext _context;
     string _userId;
 
-    private Logbook.Models.TokenCache entry;
+    private Logbook.Models.TokenCache? entry;
 
     public PersistentTokenCache(LogbookDBContext context)
     {
@@ -27,7 +27,7 @@ public class PersistentTokenCache
 
     public void SetUserId(string userId)
     {
-        Logger.Log($"setting user id to {userId}");
+        Logger.Log($"setting userid to {userId}");
         _userId = userId;
 
         if (entry == null)
@@ -40,6 +40,30 @@ public class PersistentTokenCache
         _context.SaveChanges();
     }
 
+    public void SaveTokenCache(string userId)
+    {
+        if (entry == null)
+        {
+            Logger.Log("entry is null");
+            return;
+        }
+
+        entry.UserId = userId;
+
+        Logbook.Models.TokenCache? existingCache = _context.TokenCaches.Where(c => c.UserId == userId).FirstOrDefault();
+
+        if (existingCache != null)
+        {
+            existingCache.CacheData = entry.CacheData;
+            existingCache.LastUpdated = DateTime.UtcNow;
+        }
+        else
+        {
+            _context.TokenCaches.Add(entry);
+        }
+
+        _context.SaveChanges();
+    }
     private void BeforeAccessNotification(TokenCacheNotificationArgs args)
     {
         Logger.Log("before");
@@ -51,7 +75,7 @@ public class PersistentTokenCache
 
         if (entry?.CacheData != null)
         {
-            Logger.Log("entry has cached data");            
+            Logger.Log("entry has cached data");
             args.TokenCache.DeserializeMsalV3(entry.CacheData);
         }
     }
@@ -66,17 +90,22 @@ public class PersistentTokenCache
             return;
         }
 
+        Logger.Log($"after: userid is {_userId}");
 
         entry = _context.TokenCaches.FirstOrDefault(t => t.UserId == _userId);
-        if (entry == null)
-        {
-            entry = new Logbook.Models.TokenCache { UserId = _userId };
-            _context.TokenCaches.Add(entry);
-        }
 
-        entry.CacheData = args.TokenCache.SerializeMsalV3();
-        entry.LastUpdated = DateTime.UtcNow;
-        // _context.SaveChanges();
+        Logger.Log($"No entry was found, creating new entry with userid {_userId} and adding to db");
+        entry = new Logbook.Models.TokenCache
+        {
+            UserId = _userId,
+            CacheData = args.TokenCache.SerializeMsalV3(),
+            LastUpdated = DateTime.UtcNow
+        };
+
+        if (entry.UserId != null)
+        {
+            Logger.Log("after: saving changes");
+        }
 
         Logger.Log("after has finished");
     }

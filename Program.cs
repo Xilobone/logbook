@@ -1,5 +1,6 @@
 using Logbook;
 using Logbook.Data;
+using Logbook.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
@@ -31,7 +32,7 @@ builder.Services.AddCors(options =>
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<LogbookDBContext>(options =>
-    
+
         options.UseSqlite(builder.Configuration["DBConnectionString"])
         .UseLazyLoadingProxies());
 }
@@ -42,23 +43,12 @@ else
     .UseLazyLoadingProxies());
 }
 
-// builder.Services.AddScoped<GraphClient>();
-
 //add logger
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
 
+GraphClient.Initialize(builder.Configuration);
 
-// Create a scope to resolve scoped services at startup
-// using (var scope = app.Services.CreateScope())
-// {
-//     var dbContext = scope.ServiceProvider.GetRequiredService<LogbookDBContext>();
-
-//     // Pass both configuration and DbContext to your static initializer
-// }
-
-    GraphClient.Initialize(builder.Configuration, builder.Services.BuildServiceProvider());
-
-// GraphClient.Initialize(builder.Configuration);
+builder.Services.AddHostedService<RefreshCalendarService>();
 
 var app = builder.Build();
 

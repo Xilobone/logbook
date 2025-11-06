@@ -11,19 +11,37 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace logbook.Migrations
 {
     [DbContext(typeof(LogbookDBContext))]
-    [Migration("20250913154601_NoRequiredIdGroup")]
-    partial class NoRequiredIdGroup
+    [Migration("20251020200736_NoTokenCache")]
+    partial class NoTokenCache
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasAnnotation("Proxies:ChangeTracking", false)
+                .HasAnnotation("Proxies:CheckEquality", false)
+                .HasAnnotation("Proxies:LazyLoading", true);
+
+            modelBuilder.Entity("GroupUser", b =>
+                {
+                    b.Property<Guid>("GroupsId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UsersId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("GroupsId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("GroupUser");
+                });
 
             modelBuilder.Entity("Logbook.Models.Event", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("EndTime")
@@ -47,7 +65,21 @@ namespace logbook.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TimeZone")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -62,10 +94,14 @@ namespace logbook.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("EntraId")
+                    b.Property<string>("CalendarName")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("GroupId")
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("EntraId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserName")
@@ -74,25 +110,22 @@ namespace logbook.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GroupId");
-
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Logbook.Models.User", b =>
+            modelBuilder.Entity("GroupUser", b =>
                 {
-                    b.HasOne("Logbook.Models.Group", "Group")
-                        .WithMany("Users")
-                        .HasForeignKey("GroupId")
+                    b.HasOne("Logbook.Models.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Group");
-                });
-
-            modelBuilder.Entity("Logbook.Models.Group", b =>
-                {
-                    b.Navigation("Users");
+                    b.HasOne("Logbook.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

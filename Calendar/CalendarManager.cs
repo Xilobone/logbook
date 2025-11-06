@@ -12,17 +12,17 @@ namespace Logbook.Calendar
     public class CalendarManager
     {
         readonly GraphServiceClient _graphClient;
-        readonly CalendarConfig _config;
+        readonly Models.Group _group;
 
         /// <summary>
         /// Creates a new calendar manager, responsible for creating and updating calendars
         /// </summary>
-        /// <param name="config">The calendar configuration to use</param>
+        /// <param name="group">The group this calendar belongs to</param>
         /// <param name="graphClient">The graph service client used for interacting with Microsoft Graph</param>
-        public CalendarManager(CalendarConfig config, GraphServiceClient graphClient)
+        public CalendarManager(Models.Group group, GraphServiceClient graphClient)
         {
             _graphClient = graphClient;
-            _config = config;
+            _group = group;
         }
 
         /// <summary>
@@ -135,8 +135,8 @@ namespace Logbook.Calendar
                     if (row[0] is DateTime dateTime)
                     {
                         //Start and endtime in utc
-                        DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(_config.StartTime), TimeZoneInfo.FindSystemTimeZoneById(_config.TimeZone));
-                        DateTime endTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(_config.EndTime), TimeZoneInfo.FindSystemTimeZoneById(_config.TimeZone));
+                        DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(_group.StartTime.ToTimeSpan()), TimeZoneInfo.FindSystemTimeZoneById(_group.TimeZone));
+                        DateTime endTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(_group.EndTime.ToTimeSpan()), TimeZoneInfo.FindSystemTimeZoneById(_group.TimeZone));
 
                         string description = row[1].ToString() ?? "No title";
 

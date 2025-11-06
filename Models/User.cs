@@ -21,13 +21,18 @@ namespace Logbook.Models
         public Guid EntraId { get; set; } = Guid.Empty;
 
         /// <summary>
-        /// The id of the group the user belongs to
+        /// The name of the calendar that is managed
         /// </summary>
-        public Guid GroupId { get; set; } = Guid.Empty;
+        public string CalendarName { get; set; } = string.Empty;
 
         /// <summary>
-        /// The group the user belongs to
+        /// Whether the user is enabled and their calendar is updated
         /// </summary>
-        public Group? Group { get; set; }
+        public bool Enabled { get; set; } = false;
+
+        /// <summary>
+        /// The groups the user belongs to
+        /// </summary>
+        public virtual ICollection<Group> Groups { get; set; } = new List<Group>();
     }
 }

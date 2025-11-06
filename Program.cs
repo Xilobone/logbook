@@ -1,7 +1,6 @@
-using System.Globalization;
-using logbook;
 using Logbook;
 using Logbook.Data;
+using Logbook.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
@@ -18,27 +17,45 @@ builder.Services.Configure<CalendarConfig>(builder.Configuration.GetSection("Cal
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontEnd-DEV",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:5051")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<LogbookDBContext>(options =>
-    options.UseSqlite(builder.Configuration["DBConnectionString"]));
+
+        options.UseSqlite(builder.Configuration["DBConnectionString"])
+        .UseLazyLoadingProxies());
 }
 else
 {
     builder.Services.AddDbContext<LogbookDBContext>(options =>
-    options.UseMySql(builder.Configuration["DBConnectionString"], new MariaDbServerVersion(new Version(10, 11, 14))));
+    options.UseMySql(builder.Configuration["DBConnectionString"], new MariaDbServerVersion(new Version(10, 11, 14)))
+    .UseLazyLoadingProxies());
 }
-
 
 //add logger
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
 
 GraphClient.Initialize(builder.Configuration);
 
+builder.Services.AddHostedService<RefreshCalendarService>();
+
 var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseCors("FrontEnd-DEV");
 
 app.MapControllers();
 

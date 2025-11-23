@@ -37,5 +37,22 @@ namespace Logbook.Controllers
                 memberOf!.Value
             });
         }
+
+        [HttpGet("sharepoint")]
+        public async Task<IActionResult> GetSharepoint()
+        {
+            var incomingToken = await HttpContext.GetTokenAsync("access_token");
+            var graphClient = GraphClient.GetByAccessCode(incomingToken);
+
+            SiteCollectionResponse? drives = await graphClient.Me.FollowedSites.GetAsync();
+
+            if (drives == null) return Ok("No drives found");
+
+            foreach(Site drive in drives.Value)
+            {
+                Logger.Log(drive.Name);
+            }
+            return Ok("There is no spoon");
+        }
     }
 }

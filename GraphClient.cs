@@ -90,13 +90,6 @@ namespace Logbook
             return entraId;
         }
 
-        /// <summary>
-        /// Gets 
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="userId"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
         public static async Task<GraphServiceClient> GetGraphClientForUserAsync(LogbookDBContext context, string userId)
         {
             var app = ClientApp;

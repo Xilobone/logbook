@@ -5,7 +5,7 @@ namespace Logbook
     /// to the console and/or to a file, and to filter out non-priority messages
     /// </summary>
     public class Logger
-    {   
+    {
         /// <summary>
         /// The different log levels a message can have, ranging from Trace (least urgent)
         /// to Critical (most urgent)
@@ -46,6 +46,16 @@ namespace Logbook
             Critical
         }
 
+        /// <summary>
+        /// The default logging channel
+        /// </summary>
+        public static string DefaultChannel = "Default";
+
+        /// <summary>
+        /// The database logging channel
+        /// </summary>
+        public static string DBChannel = "DB";
+
         private static Dictionary<LogLevel, ConsoleColor> consoleColors = new Dictionary<LogLevel, ConsoleColor>()
 {
     { LogLevel.Trace, ConsoleColor.Gray },
@@ -65,13 +75,14 @@ namespace Logbook
         /// <param name="configuration">The configuration to use</param>
         public static void Initialize(IConfiguration configuration)
         {
-            _config = new Config()
+            _config = new Config();
+            configuration.GetSection("channels").Bind(_config.channels);
+
+            Console.WriteLine("channeling");
+            foreach(string k in _config.channels.Keys)
             {
-                writeToConsole = bool.Parse(configuration["writeToConsole"] ?? "true"),
-                writeToFile = bool.Parse(configuration["writeToFile"] ?? "false"),
-                filePath = configuration["filePath"] ?? "",
-                minLogLevel = Enum.Parse<LogLevel>(configuration["minLogLevel"] ?? "Info")
-            };
+                Console.WriteLine(k);
+            }
         }
 
         /// <summary>
@@ -85,12 +96,22 @@ namespace Logbook
         }
 
         /// <summary>
-        /// Logs the message with the specified log level
+        /// Logs the message with the specified log level, to the default channel
         /// </summary>
         /// <param name="message">The message to be logged</param>
         /// <param name="logLevel">The level to log the message at</param>
         public static void Log(object? message, LogLevel logLevel)
         {
+            Log(message, logLevel, DefaultChannel);
+        }
+        /// <summary>
+        /// Logs the message with the specified log level
+        /// </summary>
+        /// <param name="message">The message to be logged</param>
+        /// <param name="logLevel">The level to log the message at</param>
+        /// <param name="logChannel">The logging channel to use</param>
+        public static void Log(object? message, LogLevel logLevel, string logChannel)
+        {   
             if (_config == null)
             {
                 Console.WriteLine("Logger config not set, cannot properly log messages");
@@ -101,20 +122,27 @@ namespace Logbook
                 return;
             }
 
-            if (logLevel < _config.minLogLevel) return;
+            if (!_config.channels.TryGetValue(logChannel, out Channel? channel))
+            {
+                Console.WriteLine($"Channel {logChannel} doesnt exist");
+                Console.WriteLine(message);
+                return;
+            }
+
+            if (logLevel < channel.minLogLevel) return;
 
             string formatted = $"({DateTime.Now}|{logLevel}) {message}";
 
-            if (_config.writeToConsole)
+            if (channel.writeToConsole)
             {
                 Console.ForegroundColor = consoleColors[logLevel];
                 Console.WriteLine(formatted);
                 Console.ResetColor();
             }
 
-            if (_config.writeToFile)
+            if (channel.writeToFile)
             {
-                StreamWriter writer = File.AppendText(_config.filePath);
+                StreamWriter writer = File.AppendText(channel.filePath);
                 writer.WriteLine(formatted);
                 writer.Close();
             }
@@ -163,6 +191,19 @@ namespace Logbook
         /// <param name="logLevel">The log level of the values</param>
         public static void Log<T>(ICollection<T> values, string title, Func<T, string>? formatter, LogLevel logLevel)
         {
+            Log(values, title, formatter, logLevel, DefaultChannel);
+        }
+        /// <summary>
+        /// Logs the values on seperate lines
+        /// </summary>
+        /// <typeparam name="T">The type of the values</typeparam>
+        /// <param name="values">The values to be logged</param>
+        /// <param name="title">The title to display above the logged values</param>
+        /// <param name="formatter">A formatter to use to display the values in a more readable format</param>
+        /// <param name="logLevel">The log level of the values</param>
+        /// <param name="logChannel">The logging channel to use</param>
+        public static void Log<T>(ICollection<T> values, string title, Func<T, string>? formatter, LogLevel logLevel, string logChannel)
+        {
             if (!string.IsNullOrEmpty(title)) Log(title, logLevel);
 
             Log(LINE_DELIMITER, logLevel);
@@ -184,10 +225,15 @@ namespace Logbook
             Log(LINE_DELIMITER, logLevel);
 
         }
-        /// <summary>
-        /// Represents the configuration of the logger
-        /// </summary>
+
         private class Config
+        {
+            public Dictionary<string, Channel> channels { get; set; } = new();
+        }
+        /// <summary>
+        /// Represents the configuration of a channel of the logger
+        /// </summary>
+        private class Channel
         {
             public bool writeToConsole { get; set; }
             public bool writeToFile { get; set; }

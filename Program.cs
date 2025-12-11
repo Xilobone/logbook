@@ -36,7 +36,7 @@ if (builder.Environment.IsDevelopment())
 
         options.UseSqlite(builder.Configuration["DBConnectionString"])
         .UseLazyLoadingProxies();
-        options.LogTo(message => Logger.Log(message));
+        options.LogTo(message => Logger.Log(message, Logger.LogLevel.Info, Logger.DBChannel));
 
     });
 }
@@ -46,7 +46,7 @@ else
     {
         options.UseMySql(builder.Configuration["DBConnectionString"], new MariaDbServerVersion(new Version(10, 11, 14)))
         .UseLazyLoadingProxies();
-        options.LogTo(message => Logger.Log(message));
+        options.LogTo(message => Logger.Log(message, Logger.LogLevel.Info, Logger.DBChannel));
     });
 }
 

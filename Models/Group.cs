@@ -38,5 +38,10 @@ namespace Logbook.Models
         /// A collection of all users in this group
         /// </summary>
         public virtual ICollection<User> Users { get; set; } = new List<User>();
+
+        /// <summary>
+        /// Empty Group to indicate no group is present
+        /// </summary>
+        public static readonly Group None = new();
     }
 }

@@ -93,19 +93,19 @@ namespace Logbook.Calendar
             foreach (Models.Event evnt in events)
             {
                 //check if event is already present, if so update if required, if not create event
-                string existingEventId = Calendar.FindEventId(evnt, existingEvents);
-                string id;
-                if (string.IsNullOrEmpty(existingEventId))
-                {
-                    id = await calendar.AddEvent(evnt);
-                }
-                else
-                {
-                    id = await calendar.UpdateEvent(evnt, existingEventId);
-                }
+                Guid existingEventId = Calendar.FindEventId(evnt, existingEvents);
+                Guid id;
+                // if (existingEventId == Guid.Empty)
+                // {
+                //     id = await calendar.AddEvent(evnt);
+                // }
+                // else
+                // {
+                //     id = await calendar.UpdateEvent(evnt, existingEventId);
+                // }
 
                 //mark this event as not to be deleted
-                deletedEvents.RemoveAll(e => e.Id!.Equals(id));
+                // deletedEvents.RemoveAll(e => e.Id!.Equals(id));
             }
 
             //delete all events that have not just been checked, updated or created
@@ -144,7 +144,8 @@ namespace Logbook.Calendar
                         {
                             StartTime = startTime,
                             EndTime = endTime,
-                            Title = description
+                            Title = description,
+                            Group = _group
                         });
                     }
                     else continue;

@@ -32,15 +32,22 @@ builder.Services.AddCors(options =>
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<LogbookDBContext>(options =>
+    {
 
         options.UseSqlite(builder.Configuration["DBConnectionString"])
-        .UseLazyLoadingProxies());
+        .UseLazyLoadingProxies();
+        options.LogTo(message => Logger.Log(message));
+
+    });
 }
 else
 {
     builder.Services.AddDbContext<LogbookDBContext>(options =>
-    options.UseMySql(builder.Configuration["DBConnectionString"], new MariaDbServerVersion(new Version(10, 11, 14)))
-    .UseLazyLoadingProxies());
+    {
+        options.UseMySql(builder.Configuration["DBConnectionString"], new MariaDbServerVersion(new Version(10, 11, 14)))
+        .UseLazyLoadingProxies();
+        options.LogTo(message => Logger.Log(message));
+    });
 }
 
 //add logger

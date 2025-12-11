@@ -118,12 +118,12 @@ namespace Logbook.Calendar
         /// <param name="evnt">The event to search for</param>
         /// <param name="events">The list of all events</param>
         /// <returns>The id of the event if it was found, or null otherwise</returns>
-        public static string FindEventId(Models.Event evnt, List<Models.Event> events)
+        public static Guid FindEventId(Models.Event evnt, List<Models.Event> events)
         {
             Logger.Log($"trying to find an event with name:{evnt.Title}", Logger.LogLevel.Warning);
             Logger.Log($"trying to find an event with starttime:{evnt.StartTime}", Logger.LogLevel.Warning);
             Logger.Log($"trying to find an event with endtime:{evnt.EndTime}", Logger.LogLevel.Warning);
-            string? id = events
+            Guid? id = events
                 .Where(
                     e => e.StartTime.Equals(evnt.StartTime) &&
                     e.EndTime.Equals(evnt.EndTime) &&
@@ -131,16 +131,17 @@ namespace Logbook.Calendar
                 .Select(e => e.Id)
                 .FirstOrDefault();
 
-            return id ?? string.Empty;
+            return id ?? Guid.Empty;
         }
 
         private Models.Event ToLogbookEvent(Graph.Event @event)
         {
             string title = @event.Subject != null ? @event.Subject.Replace($"Opkomst {SPELTAK}: ", "") : "";
+            
             //convert time to utc
             return new Models.Event
             {
-                Id = @event.Id ?? string.Empty,
+                Id = @event.Id != null ? Guid.Parse(@event.Id) : Guid.Empty,
                 StartTime = ToUtc(@event.Start!),
                 EndTime = ToUtc(@event.End!),
                 Title = title

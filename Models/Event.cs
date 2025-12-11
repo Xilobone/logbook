@@ -59,6 +59,11 @@ namespace Logbook.Models
 
             return true;
         }
-        
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return StartTime.GetHashCode() + EndTime.GetHashCode() + Title.GetHashCode() + Group.Id.GetHashCode();
+        }
     }
 }

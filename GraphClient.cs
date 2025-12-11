@@ -95,9 +95,9 @@ namespace Logbook
             var app = ClientApp;
 
             var tokenCache = new PersistentTokenCache(context);
-            Logger.Log("1");
-            tokenCache.SetUserId(userId);
             tokenCache.Enable(app.UserTokenCache);
+            tokenCache.SaveTokenCache(userId);
+
 
             var account = await app.GetAccountAsync(userId);
 

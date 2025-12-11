@@ -6,18 +6,29 @@ using Microsoft.Identity.Client;
 //TODO: this class creates multiple token cashes for users, one for every login, change the logic to update existing cache if found
 //TODO: encrypt cache
 //TODO: check if it is necessary to store entire cache and not just the refresh token
+/// <summary>
+/// This class represents a persistent token cache
+/// </summary>
 public class PersistentTokenCache
 {
     private readonly LogbookDBContext _context;
-    string _userId;
+    string _userId {get; set;} = string.Empty;
 
     private Logbook.Models.TokenCache? entry;
 
+    /// <summary>
+    /// Creates a new persistent token cache
+    /// </summary>
+    /// <param name="context">The database context to use for storing the caches</param>
     public PersistentTokenCache(LogbookDBContext context)
     {
         _context = context;
     }
 
+    /// <summary>
+    /// Enables the persistent token cache, ensures it will be updated accordingly
+    /// </summary>
+    /// <param name="tokenCache">The token cache to keep track of</param>
     public void Enable(ITokenCache tokenCache)
     {
         Logger.Log("enabling");
@@ -25,21 +36,25 @@ public class PersistentTokenCache
         tokenCache.SetAfterAccess(AfterAccessNotification);
     }
 
-    public void SetUserId(string userId)
-    {
-        Logger.Log($"setting userid to {userId}");
-        _userId = userId;
+    // public void SetUserId(string userId)
+    // {
+    //     Logger.Log($"setting userid to {userId}");
+    //     _userId = userId;
 
-        if (entry == null)
-        {
-            Logger.Log("entry is null");
-            return;
-        }
+    //     if (entry == null)
+    //     {
+    //         Logger.Log("entry is null");
+    //         return;
+    //     }
 
-        entry.UserId = userId;
-        _context.SaveChanges();
-    }
+    //     entry.UserId = userId;
+    //     _context.SaveChanges();
+    // }
 
+    /// <summary>
+    /// Assigns the token cache to the user with the specified Id and saves
+    /// </summary>
+    /// <param name="userId">The user id to assign the cache to</param>
     public void SaveTokenCache(string userId)
     {
         if (entry == null)

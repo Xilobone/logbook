@@ -15,14 +15,17 @@ namespace Logbook.Controllers
     public class TestController : ControllerBase
     {   
         readonly LogbookDBContext _context;
+        readonly GraphClient _graphClient;
 
         /// <summary>
         /// Creates a new test controller
         /// </summary>
         /// <param name="context">The database context to use</param>
-        public TestController(LogbookDBContext context)
+        /// <param name="graphClient">The graph client to use</param>
+        public TestController(LogbookDBContext context, GraphClient graphClient)
         {
             _context = context;
+            _graphClient = graphClient;
         }
 
         /// <summary>
@@ -33,7 +36,7 @@ namespace Logbook.Controllers
         public async Task<IActionResult> Test()
         {
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            GraphServiceClient graphClient = GraphClient.GetByAccessCode(incomingToken);
+            GraphServiceClient graphClient = _graphClient.GetByAccessCode(incomingToken);
             
             EventUpdater eventUpdater = new EventUpdater(graphClient, _context);
             await eventUpdater.Update();

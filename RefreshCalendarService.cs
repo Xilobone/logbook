@@ -1,9 +1,36 @@
+using Logbook.Data;
+using Logbook.Models;
+using Microsoft.Extensions.Options;
+using Microsoft.Graph;
+
 namespace Logbook.Services
-{
+{   
+    /// <summary>
+    /// Service which function is to periodically fetch the event information from the source and
+    /// validate if the stored events in the database are up to date
+    /// </summary>
     public class RefreshCalendarService : BackgroundService
     {
-        private readonly TimeSpan _interval = TimeSpan.FromSeconds(3600);
+        readonly IServiceProvider _serviceProvider;
+        readonly TimeSpan _interval;
 
+        /// <summary>
+        /// Creates a new refresh service
+        /// </summary>
+        /// <param name="serviceProvider">The service provider to use to create scoped contexts</param>
+        /// <param name="config">The configuration to use</param>
+        public RefreshCalendarService(IServiceProvider serviceProvider, IOptions<RefreshConfig> config)
+        {
+            _serviceProvider = serviceProvider;
+            Logger.Log($"interval: {config.Value.interval}");
+            _interval = TimeSpan.FromSeconds(config.Value.interval);
+        }
+
+        /// <summary>
+        /// Starts the refreshing progress
+        /// </summary>
+        /// <param name="stoppingToken">The token that stops execution of the refresh</param>
+        /// <returns>A task that will only conclude when the stopping token is triggered</returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Logger.Log("RefreshService started.");
@@ -26,11 +53,31 @@ namespace Logbook.Services
             }
         }
 
-        private Task Refresh()
-        {
-            // Your refresh logic here
-            Logger.Log("Refreshing...");
+        private async Task<Task> Refresh()
+        {   
+            var scope = _serviceProvider.CreateScope();
+            LogbookDBContext context = scope.ServiceProvider.GetRequiredService<LogbookDBContext>();
+            GraphClient graphClient = scope.ServiceProvider.GetRequiredService<GraphClient>();
+            foreach(User user in context.Users)
+            {   
+                GraphServiceClient graphSClient = await graphClient.GetGraphClientForUserAsync(context, user);
+
+                EventUpdater eventUpdater = new EventUpdater(graphSClient, context);
+                await eventUpdater.Update();
+            }
+
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Configuration for the refresh service
+        /// </summary>
+        public class RefreshConfig
+        {   
+            /// <summary>
+            /// The refresh interval, in seconds
+            /// </summary>
+            public int interval {get; set;} = 0;
         }
     }
 }

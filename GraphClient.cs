@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using Logbook.Data;
+using Logbook.Models;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using Microsoft.Kiota.Abstractions.Authentication;
@@ -11,7 +12,7 @@ namespace Logbook
     /// </summary>
     public class GraphClient
     {
-        static IConfidentialClientApplication ConfidentialApp
+        IConfidentialClientApplication ConfidentialApp
         {
             get
             {
@@ -30,7 +31,7 @@ namespace Logbook
         /// <summary>
         /// The confidential client application for the authentication app
         /// </summary>
-        public static IConfidentialClientApplication ClientApp
+        public IConfidentialClientApplication ClientApp
         {
             get
             {
@@ -43,20 +44,29 @@ namespace Logbook
                         .WithAuthority(new Uri($"https://login.microsoftonline.com/{_config["IdentityProvider:TenantId"]}/v2.0"))
                         .Build();
 
+                if (_persistentTokenCache == null) _persistentTokenCache = new PersistentTokenCache(_context);
+
+                _persistentTokenCache.Enable(_clientApp.UserTokenCache);
                 return _clientApp;
             }
         }
 
-        static IConfidentialClientApplication? _clientApp;
-        private static IConfidentialClientApplication? _instance;
-        private static IConfiguration? _config;
+        PersistentTokenCache? _persistentTokenCache;
+
+        IConfidentialClientApplication? _clientApp;
+        private IConfidentialClientApplication? _instance;
+        private IConfiguration _config;
+
+        LogbookDBContext _context;
 
         /// <summary>
-        /// Initializes the confidential client, must be called before the client can be used
+        /// Creates a new graph client
         /// </summary>
+        /// <param name="context">The database context to use</param>
         /// <param name="config">The configuration to use</param>
-        public static void Initialize(IConfiguration config)
+        public GraphClient(LogbookDBContext context, IConfiguration config)
         {
+            _context = context;
             _config = config;
         }
 
@@ -66,7 +76,7 @@ namespace Logbook
         /// <param name="incomingToken">The access token of the user</param>
         /// <returns>A graph service client, used to query graph data</returns>
         /// <exception cref="NullReferenceException">If no incoming token was provided</exception>
-        public static GraphServiceClient GetByAccessCode(string? incomingToken)
+        public GraphServiceClient GetByAccessCode(string? incomingToken)
         {
             if (incomingToken == null) throw new NullReferenceException("No incoming token was provided");
 
@@ -80,7 +90,7 @@ namespace Logbook
         /// </summary>
         /// <param name="incomingToken">The incoming token provided</param>
         /// <returns>The entra id of the user</returns>
-        public static Guid GetUserEntraId(string incomingToken)
+        public Guid GetUserEntraId(string incomingToken)
         {
             var handler = new JwtSecurityTokenHandler();
             var jwt = handler.ReadJwtToken(incomingToken);
@@ -90,19 +100,26 @@ namespace Logbook
             return entraId;
         }
 
-        public static async Task<GraphServiceClient> GetGraphClientForUserAsync(LogbookDBContext context, string userId)
+        /// <summary>
+        /// Creates a graph service client based on the users stored token cache
+        /// </summary>
+        /// <param name="context">The database context to use</param>
+        /// <param name="user">The user to get the token cache of</param>
+        /// <returns>A graph service client</returns>
+        /// <exception cref="Exception">Throws an exception if no cache was found, or if the cache is expired</exception>
+        public async Task<GraphServiceClient> GetGraphClientForUserAsync(LogbookDBContext context, User user)
         {
             var app = ClientApp;
 
             var tokenCache = new PersistentTokenCache(context);
             tokenCache.Enable(app.UserTokenCache);
-            tokenCache.SaveTokenCache(userId);
+            tokenCache.SaveTokenCache(user.Id);
 
 
-            var account = await app.GetAccountAsync(userId);
+            var account = await app.GetAccountAsync(user.EntraId.ToString());
 
             if (account == null)
-                throw new Exception($"No account found in cache for user {userId}");
+                throw new Exception($"No account found in cache for user {user.Id}");
 
 
 
@@ -121,9 +138,16 @@ namespace Logbook
         private readonly string _token;
         public SimpleAccessTokenProvider(string token) => _token = token;
 
+        /// <summary>
+        /// Gets an authorization token
+        /// </summary>
+        /// <param name="uri">The uri</param>
+        /// <param name="additionalAuthenticationContext">Additional context</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <returns>The autorization token</returns>
         public Task<string> GetAuthorizationTokenAsync(
             Uri uri,
-            Dictionary<string, object> additionalAuthenticationContext = default,
+            Dictionary<string, object>? additionalAuthenticationContext = null,
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_token);

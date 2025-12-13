@@ -17,14 +17,17 @@ namespace Logbook.Controllers
     public class ConfigController : ControllerBase
     {
         readonly LogbookDBContext _context;
+        readonly GraphClient _graphClient;
 
         /// <summary>
         /// Creates a new config controller
         /// </summary>
         /// <param name="context">The database context to use</param>
-        public ConfigController(LogbookDBContext context)
+        /// <param name="graphClient">The graph client to use</param>
+        public ConfigController(LogbookDBContext context, GraphClient graphClient)
         {
             _context = context;
+            _graphClient = graphClient;
         }
         /// <summary>
         /// Gets the users groups configuration
@@ -37,7 +40,7 @@ namespace Logbook.Controllers
 
             if (incomingToken == null) return Unauthorized("No token provided");
 
-            User? user = await Util.User.GetOrCreate(HttpContext, _context);
+            User? user = await Util.User.GetOrCreate(HttpContext, _context, _graphClient);
 
             if (user == null)
             {
@@ -70,7 +73,7 @@ namespace Logbook.Controllers
 
             if (incomingToken == null) return Unauthorized("No token provided");
 
-            User? user = await Util.User.GetOrCreate(HttpContext, _context);
+            User? user = await Util.User.GetOrCreate(HttpContext, _context, _graphClient);
 
             if (user == null)
             {
@@ -141,7 +144,7 @@ namespace Logbook.Controllers
             string? incomingToken = await HttpContext.GetTokenAsync("access_token");
             if (incomingToken == null) return Unauthorized("No token provided");
 
-            User? user = await Util.User.Get(HttpContext, _context);
+            User? user = await Util.User.Get(HttpContext, _context, _graphClient);
 
             if (user == null) return NotFound("User not registered");
 

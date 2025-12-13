@@ -21,16 +21,19 @@ namespace Logbook.Controllers
     {
         readonly CalendarConfig _config;
         readonly LogbookDBContext _context;
+        readonly GraphClient _graphClient;
 
         /// <summary>
         /// Creates a new calendar controller
         /// </summary>
         /// <param name="config">The calendar configuration to use for this controller</param>
         /// <param name="context">The database context to use</param>
-        public CalendarController(IOptions<CalendarConfig> config, LogbookDBContext context)
+        /// <param name="graphClient">The graph client to use for this controller</param>
+        public CalendarController(IOptions<CalendarConfig> config, LogbookDBContext context, GraphClient graphClient)
         {
             _config = config.Value;
             _context = context;
+            _graphClient = graphClient;
         }
 
         /// <summary>
@@ -43,9 +46,9 @@ namespace Logbook.Controllers
         {
             //exchange token for a graph client
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            GraphServiceClient graphClient = GraphClient.GetByAccessCode(incomingToken);
+            GraphServiceClient graphClient = _graphClient.GetByAccessCode(incomingToken);
 
-            Guid userId = GraphClient.GetUserEntraId(incomingToken!);
+            Guid userId = _graphClient.GetUserEntraId(incomingToken!);
             Models.User user = _context.Users.Where(user => user.EntraId == userId).First();
 
             int eventCount = 0;

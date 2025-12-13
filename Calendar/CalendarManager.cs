@@ -94,7 +94,7 @@ namespace Logbook.Calendar
             {
                 //check if event is already present, if so update if required, if not create event
                 Guid existingEventId = Calendar.FindEventId(evnt, existingEvents);
-                Guid id;
+                // Guid id;
                 // if (existingEventId == Guid.Empty)
                 // {
                 //     id = await calendar.AddEvent(evnt);

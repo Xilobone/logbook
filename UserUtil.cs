@@ -14,13 +14,14 @@ namespace Logbook.Util
         /// </summary>
         /// <param name="httpContext">The http request context</param>
         /// <param name="_context">The database context</param>
-        /// <returns></returns>
-        public static async Task<Models.User?> GetOrCreate(HttpContext httpContext, LogbookDBContext _context)
+        /// <param name="graphClient">The graph client to use</param>
+        /// <returns>The created or fetched user</returns>
+        public static async Task<Models.User?> GetOrCreate(HttpContext httpContext, LogbookDBContext _context, GraphClient graphClient)
         {
             var incomingToken = await httpContext.GetTokenAsync("access_token");
-            var graphClient = GraphClient.GetByAccessCode(incomingToken);
+            var _graphClient = graphClient.GetByAccessCode(incomingToken);
 
-            Guid entraId = GraphClient.GetUserEntraId(incomingToken!);
+            Guid entraId = graphClient.GetUserEntraId(incomingToken!);
 
             Models.User? user = _context.Users.Where(user => user.EntraId == entraId).FirstOrDefault();
 
@@ -28,7 +29,7 @@ namespace Logbook.Util
             {
                 Logger.Log($"No user was found with id {entraId}, creating a new user");
 
-                Graph.User? me = await graphClient.Me.GetAsync();
+                Graph.User? me = await _graphClient.Me.GetAsync();
 
                 if (me == null || me.Id == null || me.UserPrincipalName == null)
                 {
@@ -54,13 +55,13 @@ namespace Logbook.Util
         /// </summary>
         /// <param name="httpContext">The http context of the request</param>
         /// <param name="_context">The database context</param>
+        /// <param name="graphClient">The graph client to use</param>
         /// <returns>The user that made the request</returns>
-        public static async Task<Models.User?> Get(HttpContext httpContext, LogbookDBContext _context)
+        public static async Task<Models.User?> Get(HttpContext httpContext, LogbookDBContext _context, GraphClient graphClient)
         {
             var incomingToken = await httpContext.GetTokenAsync("access_token");
-            var graphClient = GraphClient.GetByAccessCode(incomingToken);
 
-            Guid entraId = GraphClient.GetUserEntraId(incomingToken!);
+            Guid entraId = graphClient.GetUserEntraId(incomingToken!);
 
             Models.User? user = _context.Users.Where(user => user.EntraId == entraId).FirstOrDefault();
 

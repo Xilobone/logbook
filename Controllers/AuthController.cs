@@ -15,15 +15,18 @@ namespace Logbook.Controllers
     {
         IConfiguration _configuration;
         readonly LogbookDBContext _context;
+        readonly GraphClient _graphClient;
 
         /// <summary>
         /// Creates a new authentication controller
         /// </summary>
         /// <param name="context">The database context to use</param>
         /// <param name="configuration">The configuration to use</param>
-        public AuthController(LogbookDBContext context, IConfiguration configuration)
+        /// <param name="graphClient">The graph client to use for this controller</param>
+        public AuthController(LogbookDBContext context, GraphClient graphClient, IConfiguration configuration)
         {
             _context = context;
+            _graphClient = graphClient;
             _configuration = configuration;
 
             // _clientApplication = ConfidentialClientApplicationBuilder.Create(_configuration["IdentityProvider:ClientId"])
@@ -65,14 +68,13 @@ namespace Logbook.Controllers
         {
             string[] scopes = new[] { "offline_access", $"api://{_configuration["AzureAd:ClientId"]}/access_as_user" };
 
-            var tokenCache = new PersistentTokenCache(_context);
-            tokenCache.Enable(GraphClient.ClientApp.UserTokenCache);
+            // var tokenCache = new PersistentTokenCache(_context);
+            // tokenCache.Enable(GraphClient.ClientApp.UserTokenCache);
 
             // Exchange authorization code for token
-            var result = await GraphClient.ClientApp.AcquireTokenByAuthorizationCode(scopes, code).ExecuteAsync();
+            var result = await _graphClient.ClientApp.AcquireTokenByAuthorizationCode(scopes, code).ExecuteAsync();
 
             // tokenCache.SetUserId(result.Account.HomeAccountId.Identifier);
-            tokenCache.SaveTokenCache(result.Account.HomeAccountId.Identifier);
 
             Guid id = Guid.Parse(result.UniqueId);
 
@@ -92,11 +94,13 @@ namespace Logbook.Controllers
                 _context.SaveChanges();
             }
 
+            // tokenCache.SaveTokenCache(user.Id);
+
+
             var obj = new
             {
                 result.AccessToken,
                 User = result.Account.Username,
-                Id = id
             };
 
             return Ok(obj);

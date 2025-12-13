@@ -12,7 +12,7 @@ using Microsoft.Identity.Client;
 public class PersistentTokenCache
 {
     private readonly LogbookDBContext _context;
-    string _userId {get; set;} = string.Empty;
+    Guid _userId {get; set;} = Guid.Empty;
 
     private Logbook.Models.TokenCache? entry;
 
@@ -55,7 +55,7 @@ public class PersistentTokenCache
     /// Assigns the token cache to the user with the specified Id and saves
     /// </summary>
     /// <param name="userId">The user id to assign the cache to</param>
-    public void SaveTokenCache(string userId)
+    public void SaveTokenCache(Guid userId)
     {
         if (entry == null)
         {
@@ -117,7 +117,7 @@ public class PersistentTokenCache
             LastUpdated = DateTime.UtcNow
         };
 
-        if (entry.UserId != null)
+        if (entry.UserId == Guid.Empty)
         {
             Logger.Log("after: saving changes");
         }

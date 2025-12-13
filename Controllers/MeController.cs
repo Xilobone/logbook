@@ -13,7 +13,17 @@ namespace Logbook.Controllers
     [Route("api/[controller]")]
     [Authorize]
     public class MeController : ControllerBase
-    {
+    {   
+        readonly GraphClient _graphClient;
+
+        /// <summary>
+        /// Create a new controller for the Me endpoint
+        /// </summary>
+        /// <param name="graphClient">The graph client to use for this controller</param>
+        public MeController(GraphClient graphClient)
+        {
+            _graphClient = graphClient;
+        }
         /// <summary>
         /// Retuns some basic info about the authenticated user
         /// </summary>
@@ -24,7 +34,7 @@ namespace Logbook.Controllers
             Logger.Log("Called Me endpoint");
 
             var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            var graphClient = GraphClient.GetByAccessCode(incomingToken);
+            var graphClient = _graphClient.GetByAccessCode(incomingToken);
             Logger.Log("Created graph client");
 
             User? me = await graphClient.Me.GetAsync();
@@ -36,23 +46,6 @@ namespace Logbook.Controllers
                 me!.UserPrincipalName,
                 memberOf!.Value
             });
-        }
-
-        [HttpGet("sharepoint")]
-        public async Task<IActionResult> GetSharepoint()
-        {
-            var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            var graphClient = GraphClient.GetByAccessCode(incomingToken);
-
-            SiteCollectionResponse? drives = await graphClient.Me.FollowedSites.GetAsync();
-
-            if (drives == null) return Ok("No drives found");
-
-            foreach(Site drive in drives.Value)
-            {
-                Logger.Log(drive.Name);
-            }
-            return Ok("There is no spoon");
         }
     }
 }

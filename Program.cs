@@ -53,8 +53,10 @@ else
 //add logger
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
 
-GraphClient.Initialize(builder.Configuration);
+builder.Services.Configure<RefreshCalendarService.RefreshConfig>(
+    builder.Configuration.GetSection("RefreshService"));
 
+builder.Services.AddScoped<GraphClient>();
 builder.Services.AddHostedService<RefreshCalendarService>();
 
 var app = builder.Build();

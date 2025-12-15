@@ -1,7 +1,7 @@
 using Logbook.Data;
 using Graph = Microsoft.Graph.Models;
 using Microsoft.AspNetCore.Authentication;
-using System.IdentityModel.Tokens.Jwt;
+
 namespace Logbook.Util
 {
     /// <summary>
@@ -67,27 +67,6 @@ namespace Logbook.Util
             Models.User? user = _context.Users.Where(user => user.Id == entraId).FirstOrDefault();
 
             return user;
-        }
-
-        /// <summary>
-        /// Gets information about the caller that presented the access token
-        /// </summary>
-        /// <param name="accessToken">The token the user presented</param>
-        /// <returns>A tokencaller object that contain information about the caller</returns>
-        public static DTO.TokenCaller GetCallerByToken(string accessToken)
-        {
-            var handler = new JwtSecurityTokenHandler();
-            var jwt = handler.ReadJwtToken(accessToken);
-            string? oid = jwt.Claims.FirstOrDefault(c => c.Type == "oid")?.Value;
-            string? upn = jwt.Claims.FirstOrDefault(c => c.Type == "upn")?.Value;
-            string? given_name = jwt.Claims.FirstOrDefault(c => c.Type == "given_name")?.Value;
-            string? family_name = jwt.Claims.FirstOrDefault(c => c.Type == "family_name")?.Value;
-            return new DTO.TokenCaller() {
-                
-            Id = Guid.Parse(oid!),
-            UserPrincipalName = upn!,
-            DisplayName = $"{given_name} {family_name}"
-            };
         }
     }
 }

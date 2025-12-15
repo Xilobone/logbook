@@ -44,16 +44,9 @@ namespace Logbook.Controllers
         [Authorize]
         public async Task<IActionResult> GetRegisterUrl()
         {
-            //Get the caller of the endpoint and add them to the db if it doesnt exist yet
-            string? accessToken = await HttpContext.GetTokenAsync("access_token");
+            DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
+            if (caller == null) return Unauthorized("No valid token was provided");
 
-            if (string.IsNullOrEmpty(accessToken))
-            {
-                Logger.Log("Endpoint was reached without a valid access token", Logger.LogLevel.Error);
-                return Unauthorized("No valid token was provided");
-            }
-
-            DTO.TokenCaller caller = Util.User.GetCallerByToken(accessToken);
             User? user = _context.Users.Where(u => u.Id == caller.Id).FirstOrDefault();
 
             if (user == null)

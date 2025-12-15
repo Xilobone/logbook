@@ -46,8 +46,6 @@ public class MSALOnBehalfOfCredential : TokenCredential
             .AcquireTokenOnBehalfOf(graphScopes, new UserAssertion(_incomingToken))
             .ExecuteAsync(cancellationToken);
 
-        // var result = await _app.AcquireTokenByAuthorizationCode(graphScopes, _incomingToken).ExecuteAsync();
-
         return new AccessToken(result.AccessToken, result.ExpiresOn);
     }
 }

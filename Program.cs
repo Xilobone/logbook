@@ -25,7 +25,8 @@ builder.Services.AddCors(options =>
             policy
                 .WithOrigins("http://localhost:5051")
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .AllowAnyMethod()
+                .AllowCredentials();
         });
 });
 
@@ -59,12 +60,15 @@ builder.Services.Configure<RefreshCalendarService.RefreshConfig>(
 builder.Services.AddScoped<GraphClient>();
 builder.Services.AddHostedService<RefreshCalendarService>();
 
+builder.Services.AddDataProtection();
+
 var app = builder.Build();
+
+app.UseCors("FrontEnd-DEV");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("FrontEnd-DEV");
 
 app.MapControllers();
 

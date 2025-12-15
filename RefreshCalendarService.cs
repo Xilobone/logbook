@@ -22,7 +22,6 @@ namespace Logbook.Services
         public RefreshCalendarService(IServiceProvider serviceProvider, IOptions<RefreshConfig> config)
         {
             _serviceProvider = serviceProvider;
-            Logger.Log($"interval: {config.Value.interval}");
             _interval = TimeSpan.FromSeconds(config.Value.interval);
         }
 
@@ -33,7 +32,7 @@ namespace Logbook.Services
         /// <returns>A task that will only conclude when the stopping token is triggered</returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            Logger.Log("RefreshService started.");
+            Logger.Log($"RefreshService started, with interval of {_interval.TotalSeconds} seconds.");
 
             while (!stoppingToken.IsCancellationRequested)
             {

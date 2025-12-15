@@ -44,14 +44,11 @@ namespace Logbook
                         .WithAuthority(new Uri($"https://login.microsoftonline.com/{_config["IdentityProvider:TenantId"]}/v2.0"))
                         .Build();
 
-                if (_persistentTokenCache == null) _persistentTokenCache = new PersistentTokenCache(_context);
 
-                _persistentTokenCache.Enable(_clientApp.UserTokenCache);
                 return _clientApp;
             }
         }
 
-        PersistentTokenCache? _persistentTokenCache;
 
         IConfidentialClientApplication? _clientApp;
         private IConfidentialClientApplication? _instance;
@@ -76,11 +73,12 @@ namespace Logbook
         /// <param name="incomingToken">The access token of the user</param>
         /// <returns>A graph service client, used to query graph data</returns>
         /// <exception cref="NullReferenceException">If no incoming token was provided</exception>
-        public GraphServiceClient GetByAccessCode(string? incomingToken)
+        public GraphServiceClient GetByAccessCode(string? incomingToken, Guid userId = default)
         {
+            Logger.Log("called get by access code");
             if (incomingToken == null) throw new NullReferenceException("No incoming token was provided");
 
-            var credential = new MSALOnBehalfOfCredential(ConfidentialApp, incomingToken!);
+            var credential = new MSALOnBehalfOfCredential(CreateConfidentialApp(userId), incomingToken!);
 
             return new GraphServiceClient(credential);
         }
@@ -109,50 +107,81 @@ namespace Logbook
         /// <exception cref="Exception">Throws an exception if no cache was found, or if the cache is expired</exception>
         public async Task<GraphServiceClient> GetGraphClientForUserAsync(LogbookDBContext context, User user)
         {
-            var app = ClientApp;
+            var app = CreateConfidentialApp(user.Id);
 
-            var tokenCache = new PersistentTokenCache(context);
-            tokenCache.Enable(app.UserTokenCache);
-            tokenCache.SaveTokenCache(user.Id);
+            Logger.Log("going to call getaccountAsync");
+            var accounts = await app.GetAccountsAsync();
+            Logger.Log($"There are {accounts.Count()} accounts");
+            foreach (var acc in accounts)
+            {
+                Logger.Log(acc.HomeAccountId);
+            }
+            Logger.Log("just called getaccountasync");
 
-
-            var account = await app.GetAccountAsync(user.EntraId.ToString());
-
-            if (account == null)
-                throw new Exception($"No account found in cache for user {user.Id}");
-
-
+            // var account = await app.GetAccountAsync(user.Id.ToString());
+            // if (account == null)
+            //     throw new Exception($"No account found in cache for user {user.Id}");
 
             var scopes = new[] { "https://graph.microsoft.com/.default" };
-            var result = await app.AcquireTokenSilent(scopes, account).ExecuteAsync();
+            // var result = await app.AcquireTokenSilent(scopes, user).ExecuteAsync();
 
-            var authProvider = new BaseBearerTokenAuthenticationProvider(new SimpleAccessTokenProvider(result.AccessToken));
+            // var authProvider = new BaseBearerTokenAuthenticationProvider(new SimpleAccessTokenProvider(result.AccessToken));
 
-            return new GraphServiceClient(authProvider);
+            // return new GraphServiceClient(authProvider);
+            return null;
         }
 
-    }
-
-    internal class SimpleAccessTokenProvider : IAccessTokenProvider
-    {
-        private readonly string _token;
-        public SimpleAccessTokenProvider(string token) => _token = token;
-
-        /// <summary>
-        /// Gets an authorization token
-        /// </summary>
-        /// <param name="uri">The uri</param>
-        /// <param name="additionalAuthenticationContext">Additional context</param>
-        /// <param name="cancellationToken">The cancellation token</param>
-        /// <returns>The autorization token</returns>
-        public Task<string> GetAuthorizationTokenAsync(
-            Uri uri,
-            Dictionary<string, object>? additionalAuthenticationContext = null,
-            CancellationToken cancellationToken = default)
+        IConfidentialClientApplication CreateConfidentialApp(Guid userId = default)
         {
-            return Task.FromResult(_token);
+            var app = ConfidentialClientApplicationBuilder.Create(_config["AzureAd:ClientId"])
+                .WithClientSecret(_config["AzureAd:ClientSecret"])
+                .WithAuthority($"https://login.microsoftonline.com/{_config["AzureAd:TenantId"]}")
+                .Build();
+
+            PersistentTokenCache tokenCache = new PersistentTokenCache(_context);
+            tokenCache.Enable(app.UserTokenCache, userId);
+            return app;
+        }
+    }
+
+}
+
+internal class MsalAccount : IAccount
+{
+        public MsalAccount()
+        {
         }
 
-        public AllowedHostsValidator AllowedHostsValidator { get; } = new();
+        public MsalAccount(string objectId, string tenantId)
+        {
+            HomeAccountId = new AccountId($"{objectId}.{tenantId}", objectId, tenantId);
+        }
+
+        public string Username { get; set; }
+
+        public string Environment { get; set; }
+
+        public AccountId HomeAccountId { get; set; }
+}
+internal class SimpleAccessTokenProvider : IAccessTokenProvider
+{
+    private readonly string _token;
+    public SimpleAccessTokenProvider(string token) => _token = token;
+
+    /// <summary>
+    /// Gets an authorization token
+    /// </summary>
+    /// <param name="uri">The uri</param>
+    /// <param name="additionalAuthenticationContext">Additional context</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <returns>The autorization token</returns>
+    public Task<string> GetAuthorizationTokenAsync(
+        Uri uri,
+        Dictionary<string, object>? additionalAuthenticationContext = null,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(_token);
     }
+
+    public AllowedHostsValidator AllowedHostsValidator { get; } = new();
 }

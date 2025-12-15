@@ -49,7 +49,7 @@ namespace Logbook.Controllers
             GraphServiceClient graphClient = _graphClient.GetByAccessCode(incomingToken);
 
             Guid userId = _graphClient.GetUserEntraId(incomingToken!);
-            Models.User user = _context.Users.Where(user => user.EntraId == userId).First();
+            Models.User user = _context.Users.Where(user => user.Id == userId).First();
 
             int eventCount = 0;
             foreach (Models.Group group in user.Groups)

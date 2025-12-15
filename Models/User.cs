@@ -1,24 +1,24 @@
 namespace Logbook.Models
-{   
+{
     /// <summary>
     /// Represents a user of the program
     /// </summary>
     public class User
-    {   
+    {
         /// <summary>
-        /// The unique identifier of the user
+        /// The unique identifier of the user, corresponds with the Entra ID
         /// </summary>
         public Guid Id { get; set; }
 
         /// <summary>
-        /// The display name of the user
+        /// The username of the user, will be their email
         /// </summary>
-        public string UserName { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
 
         /// <summary>
-        /// The entra id corresponding to this user
+        /// The display name of the user, will be their first and last name
         /// </summary>
-        public Guid EntraId { get; set; } = Guid.Empty;
+        public string DisplayName { get; set; } = string.Empty;
 
         /// <summary>
         /// The name of the calendar that is managed
@@ -34,5 +34,15 @@ namespace Logbook.Models
         /// The groups the user belongs to
         /// </summary>
         public virtual ICollection<Group> Groups { get; set; } = new List<Group>();
+
+        /// <summary>
+        /// The accessToken assosiated with this user
+        /// </summary>
+        public string AccessToken { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The refreshToken assosiated with this user
+        /// </summary>
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

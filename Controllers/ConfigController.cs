@@ -83,7 +83,7 @@ namespace Logbook.Controllers
 
             var data = new
             {
-                Id = user.EntraId,
+                Id = user.Id,
                 user.CalendarName,
                 user.Enabled
             };

@@ -3,6 +3,7 @@ using System;
 using Logbook.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace logbook.Migrations
 {
     [DbContext(typeof(LogbookDBContext))]
-    partial class LogbookDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251214141542_UsersTokens")]
+    partial class UsersTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,10 +126,6 @@ namespace logbook.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CalendarName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

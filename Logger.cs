@@ -77,12 +77,6 @@ namespace Logbook
         {
             _config = new Config();
             configuration.GetSection("channels").Bind(_config.channels);
-
-            Console.WriteLine("channeling");
-            foreach(string k in _config.channels.Keys)
-            {
-                Console.WriteLine(k);
-            }
         }
 
         /// <summary>

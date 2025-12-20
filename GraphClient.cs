@@ -1,7 +1,9 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Logbook.Data;
-using Logbook.Models;
+using Logbook.Graph;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+// using Logbook.Models;
 
 namespace Logbook
 {
@@ -27,7 +29,7 @@ namespace Logbook
         /// <param name="user">The user that the client makes request on behalf of</param>
         /// <param name="context">The databasecontext to use</param>
         /// <returns>A graph client that can be used to make requests</returns>
-        public GraphClient Create(User user, LogbookDBContext context)
+        public GraphClient Create(Models.User user, LogbookDBContext context)
         {
             return new GraphClient(_config, user, context);
         }
@@ -39,7 +41,7 @@ namespace Logbook
     public class GraphClient
     {
         readonly IConfiguration _config;
-        User _user;
+        Models.User _user;
         LogbookDBContext _context;
 
         HttpClient _httpClient;
@@ -50,7 +52,7 @@ namespace Logbook
         /// <param name="config">The configuration to use</param>
         /// <param name="user">The user that the client makes request on behalf of</param>
         /// <param name="context">The database context to use to save new access and refresh tokens</param>
-        public GraphClient(IConfiguration config, User user, LogbookDBContext context)
+        public GraphClient(IConfiguration config, Models.User user, LogbookDBContext context)
         {
             _config = config;
             _user = user;
@@ -66,7 +68,7 @@ namespace Logbook
         /// <returns>Data about the user</returns>
         public async Task<string> Me()
         {
-            return await MakeGraphRequest("https://graph.microsoft.com/v1.0/me");
+            return await MakeGraphRequest("me");
         }
 
         /// <summary>
@@ -76,15 +78,50 @@ namespace Logbook
         /// <returns>The content of the file, as a byte array</returns>
         public async Task<byte[]> GetOnedriveFile(string filePath)
         {
-            string response = await MakeGraphRequest($"https://graph.microsoft.com/v1.0/me/drive/root:{filePath}");
+            string response = await MakeGraphRequest($"me/drive/root:{filePath}");
             Graph.DriveItem driveItem = JsonSerializer.Deserialize<Graph.DriveItem>(response)!;
 
             return await _httpClient.GetByteArrayAsync(driveItem.DownloadUrl);
         }
 
-        async Task<string> MakeGraphRequest(string endpoint)
+        /// <summary>
+        /// Gets the users calendar events
+        /// </summary>
+        /// <param name="calendarName">The name of the calendar to get</param>
+        /// <returns>The users calendar events</returns>
+        public async Task<List<Event>> GetCalendarEvents(string calendarName)
         {
-            HttpResponseMessage response = await _httpClient.GetAsync(endpoint);
+            List<Event> events = new List<Event>();
+
+            //get the id of the calendar first
+            string response = await MakeGraphRequest($"me/calendars?$filter=name eq '{calendarName}'");
+            QueryResponse<Calendar> calendars = JsonSerializer.Deserialize<QueryResponse<Calendar>>(response)!;
+
+            if (calendars.Values.Count == 0)
+            {
+                Logger.Log($"Calendar named {calendarName} was not found for user with id {_user.Id}");
+                return events;
+            }
+
+            string eventResponse = await MakeGraphRequest($"me/calendars/{calendars.Values[0].Id}/events");
+
+            QueryResponse<Event> eventCollection = JsonSerializer.Deserialize<QueryResponse<Event>>(eventResponse)!;
+            events.AddRange(eventCollection.Values);
+
+            while (!string.IsNullOrEmpty(eventCollection.NextUrl))
+            {
+                eventResponse = await MakeGraphRequest(eventCollection.NextUrl, false);
+
+                eventCollection = JsonSerializer.Deserialize<QueryResponse<Event>>(eventResponse)!;
+                events.AddRange(eventCollection.Values);
+            }
+            return events;
+        }
+
+        async Task<string> MakeGraphRequest(string endpoint, bool prefixGraph = true)
+        {
+            string url = prefixGraph ? $"{_config["AzureAD:GraphUrl"]}{endpoint}" : endpoint;
+            HttpResponseMessage response = await _httpClient.GetAsync(url);
 
             //Token expired
             if ((int)response.StatusCode == StatusCodes.Status401Unauthorized)

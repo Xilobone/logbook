@@ -6,6 +6,10 @@ namespace Logbook.Services
     public class RefreshConfig
     {
         /// <summary>
+        /// Wether the service is enabled
+        /// </summary>
+        public bool enabled {get; set; } = false;
+        /// <summary>
         /// The refresh interval, in seconds
         /// </summary>
         public int interval { get; set; } = 0;

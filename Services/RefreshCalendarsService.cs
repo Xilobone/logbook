@@ -22,7 +22,7 @@ namespace Logbook.Services
         /// </summary>
         /// <param name="serviceProvider">The service provider to use to create scoped contexts</param>
         /// <param name="config">The configuration to use</param>
-        public RefreshCalendarsService(IServiceProvider serviceProvider, IOptionsMonitor<RefreshConfig> config) : base(serviceProvider,config) {}
+        public RefreshCalendarsService(IServiceProvider serviceProvider, IOptionsMonitor<RefreshConfig> config) : base(serviceProvider, config) { }
 
         /// <summary>
         /// Refreshes the events in the users calendars based on the events in the database
@@ -34,6 +34,22 @@ namespace Logbook.Services
             LogbookDBContext context = scope.ServiceProvider.GetRequiredService<LogbookDBContext>();
             GraphClientProvider clientProvider = scope.ServiceProvider.GetRequiredService<GraphClientProvider>();
 
+            foreach (User user in context.Users)
+            {
+                if (!user.Enabled) continue;
+
+                GraphClient graphClient = clientProvider.Create(user, context);
+
+                List<Graph.Event> events = await graphClient.GetCalendarEvents(user.CalendarName);
+
+                Logger.Log(events.Count);
+
+                foreach(Graph.Event e in events)
+                {
+                    Logger.Log(e.Subject);
+                }
+
+            }
             return Task.CompletedTask;
         }
     }

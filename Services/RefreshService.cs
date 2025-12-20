@@ -11,18 +11,18 @@ namespace Logbook.Services
     /// validate if the stored events in the database are up to date
     /// </summary>
     public abstract class RefreshService : BackgroundService
-    {    
+    {
         /// <summary>
         /// The name of the configuration to be loaded from the appsettings
         /// </summary>
-        protected abstract string configName {get;}
+        protected abstract string configName { get; }
 
         /// <summary>
         /// The service provider to create scoped services
         /// </summary>
         protected readonly IServiceProvider _serviceProvider;
 
-
+        readonly bool _enabled;
         readonly TimeSpan _interval;
         readonly TimeSpan _delay;
 
@@ -36,6 +36,7 @@ namespace Logbook.Services
             _serviceProvider = serviceProvider;
             _interval = TimeSpan.FromSeconds(config.Get(configName).interval);
             _delay = TimeSpan.FromSeconds(config.Get(configName).delay);
+            _enabled = config.Get(configName).enabled;
         }
 
         /// <summary>
@@ -44,7 +45,13 @@ namespace Logbook.Services
         /// <param name="stoppingToken">The token that stops execution of the refresh</param>
         /// <returns>A task that will only conclude when the stopping token is triggered</returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {   
+        {
+            if (!_enabled)
+            {
+                Logger.Log($"RefreshService({configName}) is not enabled");
+
+                return;
+            }
             await Task.Delay(_delay, stoppingToken);
 
             Logger.Log($"RefreshService({configName}) started after an initial delay of {_delay.TotalSeconds} seconds, with interval of {_interval.TotalSeconds} seconds.");

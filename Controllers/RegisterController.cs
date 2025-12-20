@@ -76,7 +76,7 @@ namespace Logbook.Controllers
                 + "&response_type=code"
                 + $"&redirect_uri={_configuration["AzureAd:RedirectUri"]}"
                 + "&response_mode=query"
-                + $"&scope=offline_access Calendars.ReadWrite"
+                + $"&scope=offline_access User.Read Calendars.ReadWrite"
                 + $"&state={state}";
 
             var data = new
@@ -119,7 +119,7 @@ namespace Logbook.Controllers
                     ["grant_type"] = "authorization_code",
                     ["code"] = code,
                     ["redirect_uri"] = _configuration["AzureAd:RedirectUri"]!,
-                    ["scope"] = $"offline_access Calendars.ReadWrite"
+                    ["scope"] = $"offline_access User.Read Calendars.ReadWrite"
                 }));
 
             string contentData = await response.Content.ReadAsStringAsync();
@@ -139,6 +139,15 @@ namespace Logbook.Controllers
                 <html>
                     <body>
                         <p>You have successfully registered, you can now close this page</p>
+                        <script>
+                            if (window.opener) {
+                                window.opener.postMessage(
+                                { success: true },
+                                    "http://localhost:5051/logbook/dashboard"
+                                );
+                            }
+                                window.close();
+                        </script>
                     </body>
                 </html>
             """;

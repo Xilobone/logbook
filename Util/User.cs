@@ -1,5 +1,5 @@
 using Logbook.Data;
-using Graph = Microsoft.Graph.Models;
+using MSGraph = Microsoft.Graph.Models;
 using Microsoft.AspNetCore.Authentication;
 
 namespace Logbook.Util
@@ -10,61 +10,17 @@ namespace Logbook.Util
     public class User
     {
         /// <summary>
-        /// Gets the stored user info that made the request, or gets the info from graph and inserts
-        /// it into the database if it doesnt exist yet
+        /// Gets the user from the database that called the endpoint
         /// </summary>
-        /// <param name="httpContext">The http request context</param>
-        /// <param name="_context">The database context</param>
-        /// <param name="graphClient">The graph client to use</param>
-        /// <returns>The created or fetched user</returns>
-        public static async Task<Models.User?> GetOrCreate(HttpContext httpContext, LogbookDBContext _context, GraphClient graphClient)
+        /// <param name="caller">Data about the endpoint caller</param>
+        /// <param name="_context">The database context to look in</param>
+        /// <param name="logLevelIfNotFound">The loglevel to log a message if the user was not found, defaults to error</param>
+        /// <returns>The user that called the endpoint, or null if this user doesn't exist</returns>
+        public static Models.User? GetUserByCaller(DTO.TokenCaller caller, LogbookDBContext _context, Logger.LogLevel logLevelIfNotFound = Logger.LogLevel.Error)
         {
-            var incomingToken = await httpContext.GetTokenAsync("access_token");
-            var _graphClient = graphClient.GetByAccessCode(incomingToken);
+            Models.User? user = _context.Users.Where(u => u.Id == caller.Id).FirstOrDefault();
 
-            Guid entraId = graphClient.GetUserEntraId(incomingToken!);
-
-            Models.User? user = _context.Users.Where(user => user.Id == entraId).FirstOrDefault();
-
-            if (user == null)
-            {
-                Logger.Log($"No user was found with id {entraId}, creating a new user");
-
-                Graph.User? me = await _graphClient.Me.GetAsync();
-
-                if (me == null || me.Id == null || me.UserPrincipalName == null)
-                {
-                    Logger.Log("Unable to obtain info about the user from graph", Logger.LogLevel.Warning);
-                    return null;
-                }
-
-                user = new Models.User()
-                {
-                    Username = me.UserPrincipalName,
-                    Id = Guid.Parse(me.Id)
-                };
-
-                _context.Users.Add(user);
-                _context.SaveChanges();
-            }
-
-            return user;
-        }
-
-        /// <summary>
-        /// Gets the stored user info that made the request, or null if the user doesnt exist
-        /// </summary>
-        /// <param name="httpContext">The http context of the request</param>
-        /// <param name="_context">The database context</param>
-        /// <param name="graphClient">The graph client to use</param>
-        /// <returns>The user that made the request</returns>
-        public static async Task<Models.User?> Get(HttpContext httpContext, LogbookDBContext _context, GraphClient graphClient)
-        {
-            var incomingToken = await httpContext.GetTokenAsync("access_token");
-
-            Guid entraId = graphClient.GetUserEntraId(incomingToken!);
-
-            Models.User? user = _context.Users.Where(user => user.Id == entraId).FirstOrDefault();
+            if (user == null) Logger.Log($"Endpoint was called by user with id {caller.Id}, but this user was not found in the db", logLevelIfNotFound);
 
             return user;
         }

@@ -1,4 +1,4 @@
-using Logbook.Calendar;
+// using Logbook.Calendar;
 using Logbook.Data;
 using Logbook.Models;
 using Microsoft.Graph;
@@ -43,27 +43,28 @@ namespace Logbook
         {
             Logger.Log("start getting events from source", Logger.LogLevel.Debug);
 
-            byte[] fileBytes = await GetFileBytes(group.FilePath);
+            byte[] fileBytes = GetFileBytes(group.FilePath);
 
             Logger.Log("gotten all bytes", Logger.LogLevel.Debug);
 
             await File.WriteAllBytesAsync("test.xlsx", fileBytes);
 
-            CalendarManager calendarManager = new CalendarManager(group, _graphClient);
+            // CalendarManager calendarManager = new CalendarManager(group, _graphClient);
 
-            using MemoryStream stream = new MemoryStream(fileBytes);
-            List<Event> events = calendarManager.CreateEventsFromStream(stream);
+            // using MemoryStream stream = new MemoryStream(fileBytes);
+            // List<Event> events = calendarManager.CreateEventsFromStream(stream);
 
-            return events;
+            // return events;
+
+            return new List<Event>();
         }
 
-        async Task<byte[]> GetFileBytes(string filePath)
-        {
-            Graph.Drive? driveItem = await _graphClient.Me.Drive.WithUrl($"https://graph.microsoft.com/v1.0/me/drive/root:{filePath}").GetAsync();
-            string? downloadUrl = (string)driveItem!.AdditionalData["@microsoft.graph.downloadUrl"];
 
-            using HttpClient httpClient = new HttpClient();
-            return await httpClient.GetByteArrayAsync(downloadUrl);
+        byte[] GetFileBytes(string filePath)
+        {
+   
+
+            return new byte[0];
         }
 
         void UpdateEventsInDB(List<Event> events)

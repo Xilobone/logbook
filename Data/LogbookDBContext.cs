@@ -33,6 +33,7 @@ namespace Logbook.Data
         /// <param name="options">Context options to use</param>
         public LogbookDBContext(DbContextOptions<LogbookDBContext> options) : base(options) { }
     }
+    
 
 
 }

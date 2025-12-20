@@ -54,11 +54,11 @@ else
 //add logger
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
 
-builder.Services.Configure<RefreshCalendarService.RefreshConfig>(
-    builder.Configuration.GetSection("RefreshService"));
+builder.Services.Configure<RefreshEventsService.RefreshConfig>(
+    builder.Configuration.GetSection("RefreshEventsService"));
 
-builder.Services.AddScoped<GraphClient>();
-builder.Services.AddHostedService<RefreshCalendarService>();
+builder.Services.AddTransient<GraphClientProvider>();
+builder.Services.AddHostedService<RefreshEventsService>();
 
 builder.Services.AddDataProtection();
 

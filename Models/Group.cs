@@ -16,9 +16,15 @@ namespace Logbook.Models
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// The path to the schedule file on sharepoint
+        /// The path to the schedule file on the source onedrive
         /// </summary>
         public string FilePath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The user id of the source
+        /// </summary>
+        public Guid SourceId {get; set; } = Guid.Empty;
+        
         /// <summary>
         /// The default start time of the events in this group
         /// </summary>

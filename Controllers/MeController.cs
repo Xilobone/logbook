@@ -1,8 +1,7 @@
 using Logbook.Data;
-using Microsoft.AspNetCore.Authentication;
+using Logbook.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Graph.Models;
 
 namespace Logbook.Controllers
 {
@@ -13,39 +12,36 @@ namespace Logbook.Controllers
     [Route("api/[controller]")]
     [Authorize]
     public class MeController : ControllerBase
-    {   
-        readonly GraphClient _graphClient;
+    {
+        readonly LogbookDBContext _context;
+        readonly GraphClientProvider _graphClientProvider;
 
         /// <summary>
         /// Create a new controller for the Me endpoint
         /// </summary>
-        /// <param name="graphClient">The graph client to use for this controller</param>
-        public MeController(GraphClient graphClient)
+        public MeController(LogbookDBContext context, GraphClientProvider graphClientProvider)
         {
-            _graphClient = graphClient;
+            _context = context;
+            _graphClientProvider = graphClientProvider;
         }
         /// <summary>
         /// Retuns some basic info about the authenticated user
         /// </summary>
         /// <returns>The users display name and principal name</returns>
         [HttpGet]
-        public async Task<IActionResult> GetMe()
+        public async Task<IActionResult> Me()
         {
-            Logger.Log("Called Me endpoint");
+            DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
+            if (caller == null) return Unauthorized("No valid token was provided");
 
-            var incomingToken = await HttpContext.GetTokenAsync("access_token");
-            var graphClient = _graphClient.GetByAccessCode(incomingToken);
-            Logger.Log("Created graph client");
+            User? user = Util.User.GetUserByCaller(caller, _context);
+            if (user == null) return Forbid("User is not registered");
 
-            User? me = await graphClient.Me.GetAsync();
-            DirectoryObjectCollectionResponse? memberOf = await graphClient.Me.MemberOf.GetAsync();
+            GraphClient graphClient = _graphClientProvider.Create(user, _context);
 
-            return Ok(new
-            {
-                me!.DisplayName,
-                me!.UserPrincipalName,
-                memberOf!.Value
-            });
+            string me = await graphClient.Me();
+
+            return Ok(me);
         }
     }
 }

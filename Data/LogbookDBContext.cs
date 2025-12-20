@@ -7,7 +7,7 @@ namespace Logbook.Data
     /// The database context of the logbook application
     /// </summary>
     public class LogbookDBContext : DbContext
-    {   
+    {
         /// <summary>
         /// The set of users
         /// </summary>
@@ -33,7 +33,4 @@ namespace Logbook.Data
         /// <param name="options">Context options to use</param>
         public LogbookDBContext(DbContextOptions<LogbookDBContext> options) : base(options) { }
     }
-    
-
-
 }

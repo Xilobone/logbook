@@ -10,53 +10,25 @@ namespace Logbook.Services
     /// Service which function is to periodically fetch the event information from the source and
     /// validate if the stored events in the database are up to date
     /// </summary>
-    public class RefreshEventsService : BackgroundService
+    public class RefreshEventsService : RefreshService
     {
-        readonly IServiceProvider _serviceProvider;
-        readonly TimeSpan _interval;
-        readonly TimeSpan _delay;
+        /// <summary>
+        /// The name of the config to use
+        /// </summary>
+        protected override string configName { get => "RefreshEvents"; }
 
         /// <summary>
         /// Creates a new refresh service
         /// </summary>
         /// <param name="serviceProvider">The service provider to use to create scoped contexts</param>
         /// <param name="config">The configuration to use</param>
-        public RefreshEventsService(IServiceProvider serviceProvider, IOptions<RefreshConfig> config)
-        {
-            _serviceProvider = serviceProvider;
-            _interval = TimeSpan.FromSeconds(config.Value.interval);
-            _delay = TimeSpan.FromSeconds(config.Value.delay);
-        }
+        public RefreshEventsService(IServiceProvider serviceProvider, IOptionsMonitor<RefreshConfig> config) : base(serviceProvider,config) {}
 
         /// <summary>
-        /// Starts the refreshing progress
+        /// Refreshes the events stored in the database based on the source
         /// </summary>
-        /// <param name="stoppingToken">The token that stops execution of the refresh</param>
-        /// <returns>A task that will only conclude when the stopping token is triggered</returns>
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {   
-            await Task.Delay(_delay, stoppingToken);
-
-            Logger.Log($"RefreshService started after an initial delay of {_delay.TotalSeconds} seconds, with interval of {_interval.TotalSeconds} seconds.");
-
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                try
-                {
-                    await Refresh();
-
-                    Logger.Log($"Refresh completed at: {DateTimeOffset.Now}");
-                }
-                catch (Exception ex)
-                {
-                    Logger.Log(ex, Logger.LogLevel.Error);
-                }
-
-                await Task.Delay(_interval, stoppingToken);
-            }
-        }
-
-        private async Task<Task> Refresh()
+        /// <returns>A task completed</returns>
+        protected override async Task<Task> Refresh()
         {
             var scope = _serviceProvider.CreateScope();
             LogbookDBContext context = scope.ServiceProvider.GetRequiredService<LogbookDBContext>();
@@ -165,22 +137,6 @@ namespace Logbook.Services
             }
 
             context.SaveChanges();
-        }
-
-        /// <summary>
-        /// Configuration for the refresh service
-        /// </summary>
-        public class RefreshConfig
-        {
-            /// <summary>
-            /// The refresh interval, in seconds
-            /// </summary>
-            public int interval { get; set; } = 0;
-
-            /// <summary>
-            /// The initual delay before starting the service, in seconds
-            /// </summary>
-            public int delay { get; set; } = 0;
         }
     }
 }

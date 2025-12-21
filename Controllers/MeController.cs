@@ -1,4 +1,5 @@
 using Logbook.Data;
+using Logbook.Graph;
 using Logbook.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

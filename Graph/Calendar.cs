@@ -9,10 +9,7 @@ namespace Logbook.Graph
     /// <param name="Name">The name of the calendar</param>
     public sealed record Calendar
     (   
-        [property: JsonPropertyName("id")]
-        string Id,
-
-        [property: JsonPropertyName("name")]
-        string Name
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)][property: JsonPropertyName("id")]string? Id,
+        [property: JsonPropertyName("name")]string Name
     );
 }

@@ -59,7 +59,7 @@ builder.Services.Configure<RefreshConfig>("RefreshEvents",
 builder.Services.Configure<RefreshConfig>("RefreshCalendars",
     builder.Configuration.GetSection("RefreshCalendarsService"));
 
-builder.Services.AddTransient<GraphClientProvider>();
+builder.Services.AddTransient<Logbook.Graph.GraphClientProvider>();
 builder.Services.AddHostedService<RefreshEventsService>();
 builder.Services.AddHostedService<RefreshCalendarsService>();
 

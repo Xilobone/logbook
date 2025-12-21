@@ -41,9 +41,18 @@ namespace Logbook.Models
         public string TimeZone { get; set; } = string.Empty;
 
         /// <summary>
+        /// The text to write before the event title
+        /// </summary>
+        public string EventPrefix {get; set;} = string.Empty;
+        /// <summary>
         /// A collection of all users in this group
         /// </summary>
         public virtual ICollection<User> Users { get; set; } = new List<User>();
+
+        /// <summary>
+        /// A collection of events in this group
+        /// </summary>
+        public virtual ICollection<Event> Events { get; set; } = new List<Event>();
 
         /// <summary>
         /// Empty Group to indicate no group is present

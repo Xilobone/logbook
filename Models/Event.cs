@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Logbook.Models
 {
@@ -30,8 +31,13 @@ namespace Logbook.Models
         /// <summary>
         /// The Group the event belongs to
         /// </summary>
-        public virtual Group Group {get; set; } = Group.None;
+        public virtual Group Group { get; set; } = Group.None;
 
+        /// <summary>
+        /// The id of this event in a users calendar, only set when this object was created from graph
+        /// </summary>
+        [NotMapped]
+        public string? CalendarEventId { get; set; } = string.Empty;
         /// <summary>
         /// Creates a string representation of the event
         /// </summary>
@@ -50,12 +56,12 @@ namespace Logbook.Models
         {
             if (obj is not Event) return false;
 
-            Event @event = (Event) obj;
+            Event @event = (Event)obj;
 
             if (!StartTime.Equals(@event.StartTime)) return false;
             if (!EndTime.Equals(@event.EndTime)) return false;
             if (!Title.Equals(@event.Title)) return false;
-            if(!Group.Id.Equals(@event.Group.Id)) return false;
+            if (!Group.Id.Equals(@event.Group.Id)) return false;
 
             return true;
         }

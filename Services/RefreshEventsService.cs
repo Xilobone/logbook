@@ -27,12 +27,12 @@ namespace Logbook.Services
         /// <summary>
         /// Refreshes the events stored in the database based on the source
         /// </summary>
-        /// <returns>A task completed</returns>
+        /// <returns>A task</returns>
         protected override async Task<Task> Refresh()
         {
             var scope = _serviceProvider.CreateScope();
             LogbookDBContext context = scope.ServiceProvider.GetRequiredService<LogbookDBContext>();
-            GraphClientProvider clientProvider = scope.ServiceProvider.GetRequiredService<GraphClientProvider>();
+            Graph.GraphClientProvider clientProvider = scope.ServiceProvider.GetRequiredService<Graph.GraphClientProvider>();
 
             foreach (Group group in context.Groups)
             {
@@ -44,7 +44,7 @@ namespace Logbook.Services
                     continue;
                 }
 
-                GraphClient graphClient = clientProvider.Create(sourceUser, context);
+                Graph.GraphClient graphClient = clientProvider.Create(sourceUser, context);
 
                 byte[] fileBytes = await graphClient.GetOnedriveFile(group.FilePath);
 

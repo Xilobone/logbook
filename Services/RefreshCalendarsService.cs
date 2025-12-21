@@ -1,5 +1,4 @@
 using System.Data;
-using ExcelDataReader;
 using Logbook.Data;
 using Logbook.Models;
 using Microsoft.Extensions.Options;
@@ -32,21 +31,69 @@ namespace Logbook.Services
         {
             var scope = _serviceProvider.CreateScope();
             LogbookDBContext context = scope.ServiceProvider.GetRequiredService<LogbookDBContext>();
-            GraphClientProvider clientProvider = scope.ServiceProvider.GetRequiredService<GraphClientProvider>();
+            Graph.GraphClientProvider clientProvider = scope.ServiceProvider.GetRequiredService<Graph.GraphClientProvider>();
 
             foreach (User user in context.Users)
-            {
+            {   
+                Logger.Log($"Going to update events of user {user.Id}");
                 if (!user.Enabled) continue;
 
-                GraphClient graphClient = clientProvider.Create(user, context);
+                Graph.GraphClient graphClient = clientProvider.Create(user, context);
 
-                List<Graph.Event> events = await graphClient.GetCalendarEvents(user.CalendarName);
-
-                Logger.Log(events.Count);
-
-                foreach(Graph.Event e in events)
+                if (!await graphClient.Calendars.DoesExist(user.CalendarName))
                 {
-                    Logger.Log(e.Subject);
+                    Logger.Log($"No calendar named {user.CalendarName} exists for user {user.Id}, creating a new calendar");
+                    await graphClient.Calendars.Create(user.CalendarName);
+                }
+
+                //get all events from the users calendar
+                List<Event> calendarEvents = await graphClient.Calendars.GetEvents(user.CalendarName);
+                Logger.Log($"user {user.Id} has {calendarEvents.Count} events in their calendar");
+                // List<Event> calendarEvents = calendarGraphEvents.Select(e => e.ToLogbookEvent()).ToList();
+
+                //keep track of all events that are no longer found in the db so we can delete them at last
+                List<Event> unmatchedEvents = [.. calendarEvents];
+
+                //for each group they are part of get the events of that group from the database and check if that event does exist
+                //in the users calendar, create it if it doesnt, or update it if necessary
+                foreach (Group group in user.Groups)
+                {   
+                    Logger.Log($"Updating events from group {group.Id}");
+                    List<Event> groupEvents = group.Events.ToList();
+
+                    foreach (Event @event in groupEvents)
+                    {
+                        //TODO: this readds and deletes events every refresh, recognition does not work
+                        Event? existingEvent = calendarEvents
+                            .Where(e => e.Title.Equals($"{group.EventPrefix}{@event.Title}"))
+                            .Where(e => e.StartTime.Equals(@event.StartTime))
+                            .FirstOrDefault(e => e.EndTime.Equals(@event.EndTime));
+
+                        if (existingEvent == null)
+                        {   
+                            Logger.Log($"Adding event {@event.Title} to user {user.Id} calendar");
+                            await graphClient.Calendars.AddEvent(user.CalendarName, @event, group);
+                        }
+                        else
+                        {   
+                            unmatchedEvents.Remove(existingEvent);
+                            //update existing event
+                            //for now the only fields in the event are the key fields, so events will always be identical or not be matched
+                        }
+                    }
+                }
+
+                foreach (Event @event in unmatchedEvents)
+                {
+                    Logger.Log($"Deleting event {@event.Title} from user {user.Id} calendar");
+                    await graphClient.Calendars.DeleteEvent(user.CalendarName, @event.CalendarEventId!);
+                }
+
+                Logger.Log(calendarEvents.Count);
+
+                foreach (Event e in calendarEvents)
+                {
+                    Logger.Log(e.Title);
                 }
 
             }

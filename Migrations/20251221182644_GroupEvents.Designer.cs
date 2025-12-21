@@ -3,6 +3,7 @@ using System;
 using Logbook.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace logbook.Migrations
 {
     [DbContext(typeof(LogbookDBContext))]
-    partial class LogbookDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251221182644_GroupEvents")]
+    partial class GroupEvents
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,10 +72,6 @@ namespace logbook.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EventPrefix")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FilePath")

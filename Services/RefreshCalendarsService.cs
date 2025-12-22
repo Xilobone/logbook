@@ -48,8 +48,6 @@ namespace Logbook.Services
 
                 //get all events from the users calendar
                 List<Event> calendarEvents = await graphClient.Calendars.GetEvents(user.CalendarName);
-                Logger.Log($"user {user.Id} has {calendarEvents.Count} events in their calendar");
-                // List<Event> calendarEvents = calendarGraphEvents.Select(e => e.ToLogbookEvent()).ToList();
 
                 //keep track of all events that are no longer found in the db so we can delete them at last
                 List<Event> unmatchedEvents = [.. calendarEvents];
@@ -58,12 +56,10 @@ namespace Logbook.Services
                 //in the users calendar, create it if it doesnt, or update it if necessary
                 foreach (Group group in user.Groups)
                 {   
-                    Logger.Log($"Updating events from group {group.Id}");
                     List<Event> groupEvents = group.Events.ToList();
 
                     foreach (Event @event in groupEvents)
-                    {
-                        //TODO: this readds and deletes events every refresh, recognition does not work
+                    {   
                         Event? existingEvent = calendarEvents
                             .Where(e => e.Title.Equals($"{group.EventPrefix}{@event.Title}"))
                             .Where(e => e.StartTime.Equals(@event.StartTime))
@@ -71,7 +67,6 @@ namespace Logbook.Services
 
                         if (existingEvent == null)
                         {   
-                            Logger.Log($"Adding event {@event.Title} to user {user.Id} calendar");
                             await graphClient.Calendars.AddEvent(user.CalendarName, @event, group);
                         }
                         else
@@ -88,14 +83,6 @@ namespace Logbook.Services
                     Logger.Log($"Deleting event {@event.Title} from user {user.Id} calendar");
                     await graphClient.Calendars.DeleteEvent(user.CalendarName, @event.CalendarEventId!);
                 }
-
-                Logger.Log(calendarEvents.Count);
-
-                foreach (Event e in calendarEvents)
-                {
-                    Logger.Log(e.Title);
-                }
-
             }
             return Task.CompletedTask;
         }

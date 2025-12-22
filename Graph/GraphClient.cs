@@ -108,7 +108,7 @@ namespace Logbook.Graph
 
                 //Set new token as header and try the endpoint again
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", newAccessToken);
-                response = await _httpClient.GetAsync(endpoint);
+                response = await _httpClient.GetAsync(url);
             }
 
             return await response.Content.ReadAsStringAsync();
@@ -169,9 +169,8 @@ namespace Logbook.Graph
         async Task<string> RefreshToken()
         {
             Logger.Log("Token was expired, obtaining a new token from Graph");
-            Logger.Log($"https://login.microsoftonline.com/{_config["AzureAD:TenantID"]}/oauth2/v2.0/token");
-            HttpRequestMessage refreshRequest = new HttpRequestMessage(HttpMethod.Post,
-                $"https://login.microsoftonline.com/{_config["AzureAD:TenantID"]}/oauth2/v2.0/token");
+            string url = $"https://login.microsoftonline.com/{_config["AzureAD:TenantID"]}/oauth2/v2.0/token";
+            HttpRequestMessage refreshRequest = new HttpRequestMessage(HttpMethod.Post,url);
 
             refreshRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
@@ -190,7 +189,6 @@ namespace Logbook.Graph
             _user.RefreshToken = token.RefreshToken;
 
             _context.SaveChanges();
-
             return token.AccessToken;
         }
 

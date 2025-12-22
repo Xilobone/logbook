@@ -30,8 +30,8 @@ namespace Logbook.Graph
             TimeZoneInfo startTimezone = TimeZoneInfo.FindSystemTimeZoneById(Start.timeZone);
             DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(DateTime.Parse(Start.DateTime), startTimezone);
 
-            TimeZoneInfo endTimezone = TimeZoneInfo.FindSystemTimeZoneById(Start.timeZone);
-            DateTime endTime = TimeZoneInfo.ConvertTimeToUtc(DateTime.Parse(Start.DateTime), endTimezone);
+            TimeZoneInfo endTimezone = TimeZoneInfo.FindSystemTimeZoneById(End.timeZone);
+            DateTime endTime = TimeZoneInfo.ConvertTimeToUtc(DateTime.Parse(End.DateTime), endTimezone);
 
             Models.Event @event = new Models.Event()
             {

@@ -52,6 +52,7 @@ else
 }
 
 //add logger
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.None);
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
 
 builder.Services.Configure<RefreshConfig>("RefreshEvents",

@@ -27,10 +27,28 @@ namespace Logbook.Data
         /// The stored users token caches
         /// </summary>
         public DbSet<TokenCache> TokenCaches { get; set; }
+
         /// <summary>
         /// Creates a new database context
         /// </summary>
         /// <param name="options">Context options to use</param>
         public LogbookDBContext(DbContextOptions<LogbookDBContext> options) : base(options) { }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.AccessToken)
+                .HasConversion(
+                    new EncryptedConverter()
+                );
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.RefreshToken)
+                .HasConversion(
+                    new EncryptedConverter()
+                );
+        }
     }
 }

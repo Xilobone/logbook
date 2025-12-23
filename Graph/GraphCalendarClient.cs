@@ -41,6 +41,7 @@ namespace Logbook.Graph
         /// <returns>Wether the calendar was successfully created or not</returns>
         public async Task<bool> Create(string calendarName)
         {
+            if(string.IsNullOrEmpty(calendarName)) return false;
             if (await DoesExist(calendarName)) return false;
 
             Calendar calendar = new Calendar(null, calendarName);

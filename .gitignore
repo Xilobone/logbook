@@ -2,6 +2,7 @@ bin/
 obj/
 files/
 logs/
+keys/
 
 logbook.db*
 appsettings.json

@@ -35,8 +35,16 @@ namespace Logbook.Controllers
             DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
             if (caller == null) return Unauthorized("No valid token was provided");
 
-            User? user = Util.User.GetUserByCaller(caller, _context);
-            if (user == null) return Forbid("User is not registered");
+            User? user = Util.User.GetUserByCaller(caller, _context, Logger.LogLevel.Debug);
+            if (user == null) 
+            {   
+
+                return Ok(new
+                {
+                    caller.DisplayName,
+                    Registered = false
+                });
+            }
 
             GraphClient graphClient = _graphClientProvider.Create(user, _context);
 

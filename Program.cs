@@ -2,6 +2,7 @@ using Logbook;
 using Logbook.Data;
 using Logbook.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 
@@ -53,6 +54,8 @@ else
 
 //add logger
 builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.None);
+builder.Logging.AddFilter("Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager", LogLevel.None);
+
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
 
 builder.Services.Configure<RefreshConfig>("RefreshEvents",
@@ -64,10 +67,14 @@ builder.Services.AddTransient<Logbook.Graph.GraphClientProvider>();
 builder.Services.AddHostedService<RefreshEventsService>();
 builder.Services.AddHostedService<RefreshCalendarsService>();
 
-builder.Services.AddDataProtection();
+//This shoul be protected by a certificate, but then the certificate password will need to be stored somewhere still
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(builder.Configuration["KeyPath"]!))
+    .SetApplicationName("Logbook");
 
 var app = builder.Build();
 
+EncryptionHelper.Init(app.Services.GetRequiredService<IDataProtectionProvider>());
 app.UseCors("FrontEnd-DEV");
 
 app.UseAuthentication();

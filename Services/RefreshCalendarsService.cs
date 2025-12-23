@@ -34,7 +34,7 @@ namespace Logbook.Services
             Graph.GraphClientProvider clientProvider = scope.ServiceProvider.GetRequiredService<Graph.GraphClientProvider>();
 
             foreach (User user in context.Users)
-            {   
+            {
                 Logger.Log($"Going to update events of user {user.Id}");
                 if (!user.Enabled) continue;
 
@@ -43,7 +43,8 @@ namespace Logbook.Services
                 if (!await graphClient.Calendars.DoesExist(user.CalendarName))
                 {
                     Logger.Log($"No calendar named {user.CalendarName} exists for user {user.Id}, creating a new calendar");
-                    await graphClient.Calendars.Create(user.CalendarName);
+                    bool successful = await graphClient.Calendars.Create(user.CalendarName);
+                    if (!successful) continue;
                 }
 
                 //get all events from the users calendar
@@ -55,22 +56,23 @@ namespace Logbook.Services
                 //for each group they are part of get the events of that group from the database and check if that event does exist
                 //in the users calendar, create it if it doesnt, or update it if necessary
                 foreach (Group group in user.Groups)
-                {   
+                {
                     List<Event> groupEvents = group.Events.ToList();
 
                     foreach (Event @event in groupEvents)
-                    {   
+                    {
                         Event? existingEvent = calendarEvents
                             .Where(e => e.Title.Equals($"{group.EventPrefix}{@event.Title}"))
                             .Where(e => e.StartTime.Equals(@event.StartTime))
                             .FirstOrDefault(e => e.EndTime.Equals(@event.EndTime));
 
                         if (existingEvent == null)
-                        {   
+                        {
+                            Logger.Log($"Adding event {@event.Title} to user {user.Id} calendar");
                             await graphClient.Calendars.AddEvent(user.CalendarName, @event, group);
                         }
                         else
-                        {   
+                        {
                             unmatchedEvents.Remove(existingEvent);
                             //update existing event
                             //for now the only fields in the event are the key fields, so events will always be identical or not be matched

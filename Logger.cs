@@ -136,7 +136,15 @@ namespace Logbook
 
             if (channel.writeToFile)
             {
-                StreamWriter writer = File.AppendText(channel.filePath);
+                using Stream stream = new FileStream
+                (
+                    channel.filePath,
+                    FileMode.Append,
+                    FileAccess.Write,
+                    FileShare.ReadWrite
+                );
+
+                using StreamWriter writer = new StreamWriter(stream);
                 writer.WriteLine(formatted);
                 writer.Close();
             }

@@ -5,7 +5,78 @@
 // using Microsoft.AspNetCore.Authorization;
 // using Microsoft.AspNetCore.Mvc;
 
-// namespace Logbook.Controllers
+using Logbook.Data;
+using Logbook.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Logbook.Controllers
+{
+    /// <summary>
+    /// Api endpoint for reading and updating the configuration, only returns the configuration
+    /// the user is allowed to see and edit
+    /// </summary>
+    [Authorize]
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ConfigController : ControllerBase
+    {
+        readonly LogbookDBContext _context;
+        /// <summary>
+        /// Creates a new config controller
+        /// </summary>
+        /// <param name="context">The database context to use</param>
+        public ConfigController(LogbookDBContext context)
+        {
+            _context = context;
+        }
+
+        /// <summary>
+        /// Gets the users configuration
+        /// </summary>
+        /// <returns>The users configuration</returns>
+        [HttpGet("personal")]
+        public async Task<IActionResult> GetConfig()
+        {
+            DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
+            if (caller == null) return Unauthorized("No valid token was provided");
+
+            User? user = Util.User.GetUserByCaller(caller, _context);
+            if (user == null) return Forbid("User is not registered");
+
+            var config = new
+            {
+                user.DisplayName,
+                user.Enabled,
+                user.CalendarName,
+            };
+
+            return Ok(config);
+        }
+
+        /// <summary>
+        /// Updates the users personal configuration
+        /// </summary>
+        /// <param name="config">The users updated configuration</param>
+        /// <returns>204 no content</returns>
+        [HttpPost("personal")]
+        public async Task<IActionResult> SetConfig([FromBody] DTO.PersonalConfig config)
+        {
+            DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
+            if (caller == null) return Unauthorized("No valid token was provided");
+
+            User? user = Util.User.GetUserByCaller(caller, _context);
+            if (user == null) return Forbid("User is not registered");
+
+            if (config.enabled != null) user.Enabled = (bool)config.enabled;
+            if (!string.IsNullOrEmpty(config.displayName)) user.DisplayName = config.displayName!;
+            if (!string.IsNullOrEmpty(config.calendarName)) user.CalendarName = config.calendarName!;
+
+            _context.SaveChanges();
+            return NoContent();
+        }
+    }
+}
 // {
 //     /// <summary>
 //     /// Api endpoint for reading and updating the configuration, only returns the configuration

@@ -183,6 +183,9 @@ namespace Logbook.Graph
 
             HttpResponseMessage refreshResponse = await _httpClient.SendAsync(refreshRequest);
             string refreshData = await refreshResponse.Content.ReadAsStringAsync();
+
+            Logger.Log(refreshRequest, Logger.LogLevel.Warning);
+            Logger.Log(refreshData, Logger.LogLevel.Warning);
             Graph.TokenResponse token = JsonSerializer.Deserialize<Graph.TokenResponse>(refreshData)!;
 
             _user.AccessToken = token.AccessToken;

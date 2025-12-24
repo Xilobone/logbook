@@ -34,6 +34,10 @@ namespace Logbook.Data
         /// <param name="options">Context options to use</param>
         public LogbookDBContext(DbContextOptions<LogbookDBContext> options) : base(options) { }
 
+        /// <summary>
+        /// Marks some model fields as being encrypted
+        /// </summary>
+        /// <param name="modelBuilder">The modelbuilder that builds the model</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

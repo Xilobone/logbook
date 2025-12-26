@@ -26,19 +26,23 @@ namespace Logbook.Controllers
             _graphClientProvider = graphClientProvider;
         }
         /// <summary>
-        /// Retuns some basic info about the authenticated user
+        /// Retuns info about the user, the only endpoint that unregistered users are allowed to called
+        /// (except registration endpoints). If an unregistered user calls this endpoint they will get their
+        /// displayname returned and a false boolean indicating their registration status
         /// </summary>
-        /// <returns>The users display name and principal name</returns>
+        /// <returns>The users values and configuration</returns>
         [HttpGet]
-        public async Task<IActionResult> Me()
+        public async Task<IActionResult> GetMe()
         {
+            (bool isValidRequest, User user, IActionResult error) = await Util.Auth.ValidateRequest(this, _context);
+            //we allow the error to be forbid in this specific case, unregistered users are allowed
+            if (!isValidRequest && error is UnauthorizedResult) return error;
+
             DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
             if (caller == null) return Unauthorized("No valid token was provided");
 
-            User? user = Util.User.GetUserByCaller(caller, _context, Logger.LogLevel.Debug);
             if (user == null)
             {
-
                 return Ok(new
                 {
                     caller.DisplayName,
@@ -46,11 +50,36 @@ namespace Logbook.Controllers
                 });
             }
 
-            GraphClient graphClient = _graphClientProvider.Create(user, _context);
+            return Ok(new
+            {
+                user.Id,
+                user.DisplayName,
+                user.Enabled,
+                user.CalendarName,
+            });
+        }
 
-            string me = await graphClient.Me();
+        /// <summary>
+        /// Updates the users personal configuration
+        /// </summary>
+        /// <param name="config">The users updated configuration</param>
+        /// <returns>A message indicating the config was updated</returns>
+        [HttpPost()]
+        public async Task<IActionResult> SetPersonalConfig([FromBody] DTO.Me config)
+        {
+            (bool isValidRequest, User user, IActionResult error) = await Util.Auth.ValidateRequest(this, _context);
+            if (!isValidRequest) return error;
 
-            return Ok(me);
+            if (config.Enabled != null) user.Enabled = (bool)config.Enabled;
+            if (!string.IsNullOrEmpty(config.DisplayName)) user.DisplayName = config.DisplayName!;
+            if (!string.IsNullOrEmpty(config.CalendarName)) user.CalendarName = config.CalendarName!;
+
+            _context.SaveChanges();
+            return Ok(new
+            {
+                Message = "User configuration was successfully changed",
+                UserId = user.Id
+            });
         }
     }
 }

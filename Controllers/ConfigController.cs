@@ -36,7 +36,7 @@ namespace Logbook.Controllers
         /// </summary>
         /// <returns>The users configuration</returns>
         [HttpGet("personal")]
-        public async Task<IActionResult> GetConfig()
+        public async Task<IActionResult> GetPersonalConfig()
         {
             DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
             if (caller == null) return Unauthorized("No valid token was provided");
@@ -44,14 +44,70 @@ namespace Logbook.Controllers
             User? user = Util.User.GetUserByCaller(caller, _context);
             if (user == null) return Forbid("User is not registered");
 
-            var config = new
+            DTO.Config.PersonalResponse config = new DTO.Config.PersonalResponse
             {
-                user.DisplayName,
-                user.Enabled,
-                user.CalendarName,
+                Id = user.Id,
+                DisplayName = user.DisplayName,
+                Enabled = user.Enabled,
+                CalendarName = user.CalendarName,
             };
 
             return Ok(config);
+        }
+
+        /// <summary>
+        /// Gets the configuration of all groups the user is a member of, or optionally only
+        /// the config of the specified group, if the user is a member of that group
+        /// </summary>
+        /// <param name="id">The id of the group to get the config of</param>
+        /// <returns>The config of the group(s)</returns>
+        [HttpGet("groups/{id:guid?}")]
+        public async Task<IActionResult> GetGroupConfig(Guid? id)
+        {
+            DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
+            if (caller == null) return Unauthorized("No valid token was provided");
+
+            User? user = Util.User.GetUserByCaller(caller, _context);
+            if (user == null) return Forbid("User is not registered");
+
+            if (id == null)
+            {
+                //return all groups the user is a member of
+                List<DTO.Config.GroupResponse> groups = user.Groups.Select(g => new DTO.Config.GroupResponse()
+                {
+                    Id = g.Id,
+                    DisplayName = g.Name,
+                    SourceId = g.SourceId,
+                    FilePath = g.FilePath,
+                    StartTime = g.StartTime,
+                    EndTime = g.EndTime,
+                    TimeZone = g.TimeZone,
+                    EventPrefix = g.EventPrefix
+                }).ToList();
+
+                return Ok(groups);
+            }
+
+            // if (!Guid.TryParse(id, out Guid groupId))
+            // {
+            //     return BadRequest("Group id must be in the GUID format");
+            // }
+
+            Group? group = user.Groups.FirstOrDefault(g => g.Id.Equals(id));
+
+            if (group == null) return NotFound($"No group with id {id} was found, or you are not a member of this group");
+
+            return Ok(new DTO.Config.GroupResponse()
+            {
+                Id = group.Id,
+                DisplayName = group.Name,
+                SourceId = group.SourceId,
+                FilePath = group.FilePath,
+                StartTime = group.StartTime,
+                EndTime = group.EndTime,
+                TimeZone = group.TimeZone,
+                EventPrefix = group.EventPrefix
+            });
         }
 
         /// <summary>
@@ -60,7 +116,7 @@ namespace Logbook.Controllers
         /// <param name="config">The users updated configuration</param>
         /// <returns>204 no content</returns>
         [HttpPost("personal")]
-        public async Task<IActionResult> SetConfig([FromBody] DTO.PersonalConfig config)
+        public async Task<IActionResult> SetPersonalConfig([FromBody] DTO.Config.PersonalRequest config)
         {
             DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
             if (caller == null) return Unauthorized("No valid token was provided");
@@ -68,9 +124,9 @@ namespace Logbook.Controllers
             User? user = Util.User.GetUserByCaller(caller, _context);
             if (user == null) return Forbid("User is not registered");
 
-            if (config.enabled != null) user.Enabled = (bool)config.enabled;
-            if (!string.IsNullOrEmpty(config.displayName)) user.DisplayName = config.displayName!;
-            if (!string.IsNullOrEmpty(config.calendarName)) user.CalendarName = config.calendarName!;
+            if (config.Enabled != null) user.Enabled = (bool)config.Enabled;
+            if (!string.IsNullOrEmpty(config.DisplayName)) user.DisplayName = config.DisplayName!;
+            if (!string.IsNullOrEmpty(config.CalendarName)) user.CalendarName = config.CalendarName!;
 
             _context.SaveChanges();
             return NoContent();

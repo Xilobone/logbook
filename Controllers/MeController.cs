@@ -36,8 +36,8 @@ namespace Logbook.Controllers
             if (caller == null) return Unauthorized("No valid token was provided");
 
             User? user = Util.User.GetUserByCaller(caller, _context, Logger.LogLevel.Debug);
-            if (user == null) 
-            {   
+            if (user == null)
+            {
 
                 return Ok(new
                 {

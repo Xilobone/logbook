@@ -1,0 +1,296 @@
+using Logbook.Data;
+using Logbook.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+
+namespace Logbook.Controllers
+{
+    /// <summary>
+    /// Api endpoint for managing groups, exposes methods that allows the users
+    /// to create groups, add members to a group, remove themselves from a group and obtain and update
+    /// the configuration of a group
+    /// </summary>
+    [Authorize]
+    [ApiController]
+    [Route("api/{controller}")]
+    public class GroupsController : ControllerBase
+    {
+        readonly LogbookDBContext _context;
+        readonly ApplicationSettings _settings;
+
+        /// <summary>
+        /// Creates a new groups controller
+        /// </summary>
+        /// <param name="context">The database context to use</param>
+        /// <param name="settings">The application settings to use</param>
+        public GroupsController(LogbookDBContext context, IOptions<ApplicationSettings> settings)
+        {
+            _context = context;
+            _settings = settings.Value;
+
+        }
+        /// <summary>
+        /// Gets the groups the user is a member of
+        /// </summary>
+        /// <returns>A list of all groups the user is a member of</returns>
+        [HttpGet("{id:guid?}")]
+        public async Task<IActionResult> GetGroups(Guid? id)
+        {
+            DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
+            if (caller == null) return Unauthorized("No valid token was provided");
+
+            User? user = Util.User.GetUserByCaller(caller, _context);
+            if (user == null) return Forbid("User is not registered");
+
+            if (id == null)
+            {
+                List<DTO.Group.Get> groups = user.Groups.Select(g => new DTO.Group.Get()
+                {
+                    Id = g.Id,
+                    DisplayName = g.Name,
+                    SourceId = g.SourceId,
+                    FilePath = g.FilePath,
+                    StartTime = g.StartTime,
+                    EndTime = g.EndTime,
+                    TimeZone = g.TimeZone,
+                    EventPrefix = g.EventPrefix
+                }).ToList();
+
+                return Ok(groups);
+            }
+
+            Group? group = user.Groups.FirstOrDefault(g => g.Id.Equals(id));
+            if (group == null) return NotFound($"No group with id {id} was found, or you are not a member of the group");
+
+            return Ok(new DTO.Group.Get()
+            {
+                Id = group.Id,
+                DisplayName = group.Name,
+                SourceId = group.SourceId,
+                FilePath = group.FilePath,
+                StartTime = group.StartTime,
+                EndTime = group.EndTime,
+                TimeZone = group.TimeZone,
+                EventPrefix = group.EventPrefix
+            });
+        }
+
+        /// <summary>
+        /// Lets the user create a new group, the user wil automatically be added to the group
+        /// </summary>
+        /// <param name="groupRequest">The parameters required to create the group</param>
+        /// <returns>The created group id</returns>
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateGroup([FromBody] DTO.Group.Create groupRequest)
+        {
+            DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
+            if (caller == null) return Unauthorized("No valid token was provided");
+
+            User? user = Util.User.GetUserByCaller(caller, _context);
+            if (user == null) return Forbid("User is not registered");
+
+            if (!Guid.TryParse(groupRequest.SourceId, out Guid sourceId))
+            {
+                return BadRequest("Source id must be a valid Guid");
+            }
+
+            if (!_context.Users.Where(u => u.Id.Equals(sourceId)).Any())
+            {
+                return NotFound($"No user was found with id {sourceId}");
+            }
+
+            if (user.Groups.Count >= _settings.maxGroups)
+            {
+                return Conflict($"User cannot be a member of more than {_settings.maxGroups} groups (by design)");
+            }
+
+            Group group = new Group()
+            {
+                Name = groupRequest.DisplayName,
+                SourceId = sourceId,
+                FilePath = groupRequest.FilePath,
+                StartTime = groupRequest.StartTime,
+                EndTime = groupRequest.EndTime,
+                TimeZone = groupRequest.TimeZone,
+                EventPrefix = groupRequest.EventPrefix ?? "",
+            };
+
+            _context.Groups.Add(group);
+            group.Users.Add(user);
+            _context.SaveChanges();
+
+            Logger.Log($"User {user.Id} created group {group.Id}");
+
+            var response = new
+            {
+                Message = $"Group {group.Name} was successfully created",
+                group.Id
+            };
+
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Updates a group with new values, not all values are required to be included
+        /// in the request
+        /// </summary>
+        /// <param name="id">The id of the group to be updated</param>
+        /// <param name="updateParam">The new values of the group</param>
+        /// <returns>The updated group id</returns>
+        [HttpPost("{id:guid}")]
+        public async Task<IActionResult> UpdateGroup(Guid id, [FromBody] DTO.Group.Update updateParam)
+        {
+            (bool isValidRequest, User user, IActionResult requestError) = await Util.Auth.ValidateRequest(this, _context);
+            if (!isValidRequest) return requestError;
+
+            Group? group = user.Groups.FirstOrDefault(g => g.Id.Equals(id));
+            if (group == null) return NotFound($"No group with id {id} was found, or you are not a member of the group");
+
+            if (!string.IsNullOrEmpty(updateParam.DisplayName)) group.Name = updateParam.DisplayName;
+            if (!string.IsNullOrEmpty(updateParam.FilePath)) group.FilePath = updateParam.FilePath;
+            if (!string.IsNullOrEmpty(updateParam.TimeZone)) group.TimeZone = updateParam.TimeZone;
+            if (!string.IsNullOrEmpty(updateParam.EventPrefix)) group.EventPrefix = updateParam.EventPrefix;
+            if (updateParam.StartTime != null) group.StartTime = (TimeOnly)updateParam.StartTime;
+            if (updateParam.EndTime != null) group.EndTime = (TimeOnly)updateParam.EndTime;
+
+            if (!string.IsNullOrEmpty(updateParam.SourceId))
+            {
+                (bool isValid, User source, IActionResult error) = ValidateUserId(updateParam.SourceId);
+                if (!isValid) return error;
+
+                group.SourceId = source.Id;
+            }
+
+            _context.SaveChanges();
+            return Ok(new
+            {
+                Message = "Group was successfully updated",
+                group.Id
+            });
+        }
+
+        /// <summary>
+        /// Gets a list of all members in the specified group, if the user is a member of this group
+        /// themselves
+        /// </summary>
+        /// <param name="id">The id of the group to get the members of</param>
+        /// <returns>A list of all members in a group</returns>
+        [HttpGet("{id:guid}/members")]
+        public async Task<IActionResult> GetMembers(Guid id)
+        {
+            (bool isValid, User user, IActionResult error) = await Util.Auth.ValidateRequest(this, _context);
+            if (!isValid) return error;
+
+            Group? group = user.Groups.FirstOrDefault(g => g.Id.Equals(id));
+            if (group == null) return NotFound($"No group with id {id} was found, or you are not a member of the group");
+
+            List<DTO.Group.Member> members = group.Users.Select(u => new DTO.Group.Member()
+            {
+                Id = u.Id,
+                DisplayName = u.DisplayName
+            }).ToList();
+
+            return Ok(members);
+
+        }
+
+        /// <summary>
+        /// Adds a member to the specified group, if the user making the call is a member of this group
+        /// themselves
+        /// </summary>
+        /// <param name="id">The group id to add the member to</param>
+        /// <param name="memberParams">The parameters required to add a member</param>
+        /// <returns></returns>
+        [HttpPost("{id:guid}/members/add")]
+        public async Task<IActionResult> AddMember(Guid id, [FromBody] DTO.Group.ChangeMember memberParams)
+        {
+            //check if request was valid
+            (bool isValidRequest, User user, IActionResult requestError) = await Util.Auth.ValidateRequest(this, _context);
+            if (!isValidRequest) return requestError;
+
+            //check if user is a member of the group they are trying to change
+            Group? group = user.Groups.FirstOrDefault(g => g.Id.Equals(id));
+            if (group == null) return NotFound($"No group with id {id} was found, or you are not a member of the group");
+
+            //check if the user id they have provided is valid and known
+            (bool isValidId, User member, IActionResult idError) = ValidateUserId(memberParams.MemberId);
+            if (!isValidId) return idError;
+
+            //check if the provided user id is not already a member of the group
+            if (group.Users.Any(u => u.Id.Equals(member.Id))) return Conflict("User is already a member of the group");
+
+            //check if the provided member is not at their max number of groups
+            if (member.Groups.Count >= _settings.maxGroups)
+            {
+                return Conflict($"User cannot be a member of more than {_settings.maxGroups} groups (by design)");
+            }
+            
+            //finally add the user to the group
+            Logger.Log($"Adding user {member.Id} to group {id}, requested by user {user.Id}");
+            group.Users.Add(member);
+            _context.SaveChanges();
+
+            return Ok(new
+            {
+                Message = "Successfully added member to group",
+                MemberId = member.Id,
+                GroupId = group.Id
+            });
+        }
+
+        /// <summary>
+        /// Removes a member to the specified group, if the user making the call is a member of this group
+        /// themselves
+        /// </summary>
+        /// <param name="id">The group id to remve the member from</param>
+        /// <param name="memberParams">The parameters required to remove a member</param>
+        /// <returns></returns>
+        [HttpPost("{id:guid}/members/remove")]
+        public async Task<IActionResult> RemoveMember(Guid id, [FromBody] DTO.Group.ChangeMember memberParams)
+        {
+            //check if request was valid
+            (bool isValidRequest, User user, IActionResult requestError) = await Util.Auth.ValidateRequest(this, _context);
+            if (!isValidRequest) return requestError;
+
+            //check if user is a member of the group they are trying to change
+            Group? group = user.Groups.FirstOrDefault(g => g.Id.Equals(id));
+            if (group == null) return NotFound($"No group with id {id} was found, or you are not a member of the group");
+
+            //check if the user id they have provided is valid and known
+            (bool isValidId, User member, IActionResult idError) = ValidateUserId(memberParams.MemberId);
+            if (!isValidId) return idError;
+
+            //check if the provided user id is actually a member of the group
+            if (!group.Users.Any(u => u.Id.Equals(member.Id))) return Conflict("User is not a member of the group");
+
+            //finally remove the user from the group
+            Logger.Log($"Removing user {member.Id} from group {id}, requested by user {user.Id}");
+            group.Users.Remove(member);
+            _context.SaveChanges();
+
+            return Ok(new
+            {
+                Message = "Successfully removed member from group",
+                MemberId = member.Id,
+                GroupId = group.Id
+            });
+        }
+
+        (bool isValid, User user, IActionResult error) ValidateUserId(string id)
+        {
+            if (!Guid.TryParse(id, out Guid guid))
+            {
+                return (false, null!, BadRequest("Source id must be a valid Guid"));
+            }
+
+            User? user = _context.Users.Where(u => u.Id.Equals(guid)).FirstOrDefault();
+            if (user == null)
+            {
+                return (false, null!, NotFound($"No user was found with id {guid}"));
+            }
+
+            return (true, user, Ok());
+        }
+    }
+}

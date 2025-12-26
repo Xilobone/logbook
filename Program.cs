@@ -72,6 +72,7 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(builder.Configuration["KeyPath"]!))
     .SetApplicationName("Logbook");
 
+builder.Services.Configure<ApplicationSettings>(builder.Configuration.GetSection("ApplicationSettings"));
 var app = builder.Build();
 
 EncryptionHelper.Init(app.Services.GetRequiredService<IDataProtectionProvider>());

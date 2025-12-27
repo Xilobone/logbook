@@ -3,6 +3,7 @@ using Logbook.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Microsoft.Graph;
 
 namespace Logbook.Controllers
 {
@@ -84,15 +85,10 @@ namespace Logbook.Controllers
             (bool isValidRequest, User user, IActionResult requestError) = await Util.Auth.ValidateRequest(this, _context);
             if (!isValidRequest) return requestError;
 
-            if (!Guid.TryParse(groupRequest.SourceId, out Guid sourceId))
-            {
-                return BadRequest("Source id must be a valid Guid");
-            }
+            (bool isValidId, User source, IActionResult idError) = ValidateUserId(groupRequest.SourceId);
+            if (!isValidId) return idError;
 
-            if (!_context.Users.Where(u => u.Id.Equals(sourceId)).Any())
-            {
-                return NotFound($"No user was found with id {sourceId}");
-            }
+            if (!source.CanBeSource) return Conflict($"User {source.DisplayName} does not have the right registration to act as the source");
 
             if (user.Groups.Count >= _settings.maxGroups)
             {
@@ -102,7 +98,7 @@ namespace Logbook.Controllers
             Group group = new Group()
             {
                 Name = groupRequest.DisplayName,
-                SourceId = sourceId,
+                SourceId = source.Id,
                 FilePath = groupRequest.FilePath,
                 StartTime = groupRequest.StartTime,
                 EndTime = groupRequest.EndTime,
@@ -152,6 +148,8 @@ namespace Logbook.Controllers
             {
                 (bool isValid, User source, IActionResult error) = ValidateUserId(updateParam.SourceId);
                 if (!isValid) return error;
+
+                if (!source.CanBeSource) return Conflict($"User {source.DisplayName} does not have the right registration to act as the source");
 
                 group.SourceId = source.Id;
             }

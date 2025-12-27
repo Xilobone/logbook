@@ -33,6 +33,11 @@ namespace Logbook.Models
         public bool Enabled { get; set; } = false;
 
         /// <summary>
+        /// Whether the user can be the source for the schedule files
+        /// </summary>
+        public bool CanBeSource {get; set; } = false;
+
+        /// <summary>
         /// The groups the user belongs to
         /// </summary>
         public virtual ICollection<Group> Groups { get; set; } = new List<Group>();

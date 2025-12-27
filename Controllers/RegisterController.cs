@@ -42,7 +42,8 @@ namespace Logbook.Controllers
         /// </summary>
         /// <returns>The url the user can reach to register</returns>
         [Authorize]
-        public async Task<IActionResult> GetRegisterUrl()
+        [HttpGet]
+        public async Task<IActionResult> GetRegisterUrl([FromQuery] bool source = false)
         {
             DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
             if (caller == null) return Unauthorized("No valid token was provided");
@@ -57,7 +58,8 @@ namespace Logbook.Controllers
                     Id = caller.Id,
                     Username = caller.UserPrincipalName,
                     DisplayName = caller.DisplayName,
-                    Enabled = false
+                    Enabled = false,
+                    CanBeSource = false,
                 };
 
                 Logger.Log($"Registered new user with Id {user.Id}");
@@ -67,7 +69,7 @@ namespace Logbook.Controllers
 
             _context.SaveChanges();
 
-            DTO.AuthState stateObj = new DTO.AuthState(user.Id, DateTimeOffset.UtcNow);
+            DTO.AuthState stateObj = new DTO.AuthState(user.Id, DateTimeOffset.UtcNow, source);
             string json = JsonSerializer.Serialize(stateObj);
             var state = _dataProtector.Protect(json);
 
@@ -76,7 +78,7 @@ namespace Logbook.Controllers
                 + "&response_type=code"
                 + $"&redirect_uri={_configuration["AzureAd:RedirectUri"]}"
                 + "&response_mode=query"
-                + $"&scope=offline_access User.Read Calendars.ReadWrite"
+                + $"&scope={getScopes(source)}"
                 + $"&state={state}";
 
             var data = new
@@ -119,7 +121,7 @@ namespace Logbook.Controllers
                     ["grant_type"] = "authorization_code",
                     ["code"] = code,
                     ["redirect_uri"] = _configuration["AzureAd:RedirectUri"]!,
-                    ["scope"] = $"offline_access User.Read Calendars.ReadWrite"
+                    ["scope"] = getScopes(authState.sourceRequest)
                 }));
 
             string contentData = await response.Content.ReadAsStringAsync();
@@ -132,10 +134,10 @@ namespace Logbook.Controllers
             user.AccessToken = graphAccessToken!;
             user.RefreshToken = graphRefreshToken!;
             user.Enabled = true;
+            user.CanBeSource = authState.sourceRequest;
 
             _context.SaveChanges();
 
-            string val = $"hello {{fha}}";
             string content = """
                 <html>
                     <body>
@@ -155,6 +157,16 @@ namespace Logbook.Controllers
 
             content = content.Replace("__DASHBOARD_URL__", _configuration["postRegistrationMessage"]);
             return Content(content, "text/html");
+        }
+
+
+        string getScopes(bool source)
+        {
+            string scopes = source
+                ? "offline_access User.Read Calendars.ReadWrite Files.Read.All"
+            : "offline_access User.Read Calendars.ReadWrite";
+
+            return scopes;
         }
     }
 }

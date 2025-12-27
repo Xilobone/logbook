@@ -1,3 +1,8 @@
+# For a database migration do the following:
+# $env:ASPNETCORE_ENVIRONMENT="Production"
+# dotnet ef migrations script <last migration> -o migration.sql -i
+# $env:ASPNETCORE_ENVIRONMENT="Development"
+
 $logfile = "logs/deploy.log"
 $exludedFiles = 
     "es", 

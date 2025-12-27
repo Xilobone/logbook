@@ -37,11 +37,8 @@ namespace Logbook.Controllers
         [HttpGet("{id:guid?}")]
         public async Task<IActionResult> GetGroups(Guid? id)
         {
-            DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
-            if (caller == null) return Unauthorized("No valid token was provided");
-
-            User? user = Util.User.GetUserByCaller(caller, _context);
-            if (user == null) return Forbid("User is not registered");
+            (bool isValidRequest, User user, IActionResult requestError) = await Util.Auth.ValidateRequest(this, _context);
+            if (!isValidRequest) return requestError;
 
             if (id == null)
             {
@@ -84,11 +81,8 @@ namespace Logbook.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateGroup([FromBody] DTO.Group.Create groupRequest)
         {
-            DTO.TokenCaller? caller = await Util.Auth.GetCallerByHttpContext(HttpContext);
-            if (caller == null) return Unauthorized("No valid token was provided");
-
-            User? user = Util.User.GetUserByCaller(caller, _context);
-            if (user == null) return Forbid("User is not registered");
+            (bool isValidRequest, User user, IActionResult requestError) = await Util.Auth.ValidateRequest(this, _context);
+            if (!isValidRequest) return requestError;
 
             if (!Guid.TryParse(groupRequest.SourceId, out Guid sourceId))
             {
@@ -225,7 +219,7 @@ namespace Logbook.Controllers
             {
                 return Conflict($"User cannot be a member of more than {_settings.maxGroups} groups (by design)");
             }
-            
+
             //finally add the user to the group
             Logger.Log($"Adding user {member.Id} to group {id}, requested by user {user.Id}");
             group.Users.Add(member);

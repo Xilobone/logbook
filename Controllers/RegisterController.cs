@@ -135,6 +135,7 @@ namespace Logbook.Controllers
 
             _context.SaveChanges();
 
+            string val = $"hello {{fha}}";
             string content = """
                 <html>
                     <body>
@@ -143,7 +144,7 @@ namespace Logbook.Controllers
                             if (window.opener) {
                                 window.opener.postMessage(
                                 { success: true },
-                                    "http://localhost:5051/logbook/dashboard"
+                                    "__DASHBOARD_URL__"
                                 );
                             }
                                 window.close();
@@ -151,6 +152,8 @@ namespace Logbook.Controllers
                     </body>
                 </html>
             """;
+
+            content = content.Replace("__DASHBOARD_URL__", _configuration["postRegistrationMessage"]);
             return Content(content, "text/html");
         }
     }

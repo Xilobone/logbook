@@ -24,11 +24,6 @@ namespace Logbook.Data
         public DbSet<Group> Groups { get; set; }
 
         /// <summary>
-        /// The stored users token caches
-        /// </summary>
-        public DbSet<TokenCache> TokenCaches { get; set; }
-
-        /// <summary>
         /// Creates a new database context
         /// </summary>
         /// <param name="options">Context options to use</param>

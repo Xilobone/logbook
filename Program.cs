@@ -1,4 +1,3 @@
-using System.Reflection;
 using Logbook;
 using Logbook.Data;
 using Logbook.Services;
@@ -14,35 +13,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("FrontEnd-DEV",
-        policy =>
-        {
-            policy
-                .WithOrigins("http://localhost:5051")
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        });
-});
-
 if (builder.Environment.IsDevelopment())
 {
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("FrontEnd-DEV",
+            policy =>
+            {
+                policy
+                    .WithOrigins("http://localhost:5051")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+    });
+
     builder.Services.AddDbContext<LogbookDBContext>(options =>
     {
-
         options.UseSqlite(builder.Configuration["DBConnectionString"])
         .UseLazyLoadingProxies();
         options.LogTo(message => Logger.Log(message, Logger.LogLevel.Info, Logger.DBChannel));
-
     });
-}
-else
+} else
 {
     builder.Services.AddDbContext<LogbookDBContext>(options =>
     {
@@ -55,7 +50,6 @@ else
 //add logger
 builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.None);
 builder.Logging.AddFilter("Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager", LogLevel.None);
-
 Logger.Initialize(builder.Configuration.GetSection("Logger"));
 
 builder.Services.Configure<RefreshConfig>("RefreshEvents",

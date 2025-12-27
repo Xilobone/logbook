@@ -1,3 +1,4 @@
+using System.Reflection;
 using Logbook;
 using Logbook.Data;
 using Logbook.Services;
@@ -13,7 +14,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-builder.Services.Configure<CalendarConfig>(builder.Configuration.GetSection("CalendarConfig"));
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -80,7 +80,6 @@ app.UseCors("FrontEnd-DEV");
 
 app.UseAuthentication();
 app.UseAuthorization();
-
 
 app.MapControllers();
 

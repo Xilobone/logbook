@@ -78,6 +78,7 @@ namespace Logbook.Controllers
             return Ok(new
             {
                 Message = "User configuration was successfully changed",
+                Success = true,
                 UserId = user.Id
             });
         }

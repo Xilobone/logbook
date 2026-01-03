@@ -163,7 +163,7 @@ namespace Logbook.Controllers
         string getScopes(bool source)
         {
             string scopes = source
-                ? "offline_access User.Read Calendars.ReadWrite Files.Read.All"
+                ? "offline_access User.Read Calendars.ReadWrite Files.Read"
             : "offline_access User.Read Calendars.ReadWrite";
 
             return scopes;

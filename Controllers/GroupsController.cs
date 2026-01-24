@@ -88,11 +88,19 @@ namespace Logbook.Controllers
             (bool isValidId, User source, IActionResult idError) = ValidateUserId(groupRequest.SourceId);
             if (!isValidId) return idError;
 
-            if (!source.CanBeSource) return Conflict($"User {source.DisplayName} does not have the right registration to act as the source");
+            if (!source.CanBeSource) return Conflict(new
+            {
+                Message = $"User {source.DisplayName} does not have the right registration to act as the source",
+                Success = false
+            });
 
             if (user.Groups.Count >= _settings.maxGroups)
             {
-                return Conflict($"User cannot be a member of more than {_settings.maxGroups} groups (by design)");
+                return Conflict(new
+                {
+                    Message = $"User cannot be a member of more than {_settings.maxGroups} groups (by design)",
+                    Success = false
+                });
             }
 
             Group group = new Group()
@@ -112,13 +120,12 @@ namespace Logbook.Controllers
 
             Logger.Log($"User {user.Id} created group {group.Id}");
 
-            var response = new
+            return Ok(new
             {
                 Message = $"Group {group.Name} was successfully created",
+                Success = true,
                 group.Id
-            };
-
-            return Ok(response);
+            });
         }
 
         /// <summary>
@@ -158,6 +165,7 @@ namespace Logbook.Controllers
             return Ok(new
             {
                 Message = "Group was successfully updated",
+                Success = true,
                 group.Id
             });
         }
@@ -183,7 +191,11 @@ namespace Logbook.Controllers
                 DisplayName = u.DisplayName
             }).ToList();
 
-            return Ok(members);
+            return Ok(new
+            {
+                members,
+                Success = true
+            });
 
         }
 
@@ -231,6 +243,7 @@ namespace Logbook.Controllers
             });
         }
 
+
         /// <summary>
         /// Removes a member to the specified group, if the user making the call is a member of this group
         /// themselves
@@ -269,6 +282,125 @@ namespace Logbook.Controllers
             });
         }
 
+        /// <summary>
+        /// Adds and removes multiple users from the group at once
+        /// </summary>
+        /// <param name="id">The group id to update</param>
+        /// <param name="memberParams">A list of user ids to add or remove from the group</param>
+        /// <returns>A list of return statusses</returns>
+        [HttpPost("{id:guid}/members/update")]
+        public async Task<IActionResult> UpdateMembers(Guid id, [FromBody] DTO.Group.ChangeMembers memberParams)
+        {
+            //check if request was valid
+            (bool isValidRequest, User user, IActionResult requestError) = await Util.Auth.ValidateRequest(this, _context);
+            if (!isValidRequest) return requestError;
+
+            //check if user is a member of the group they are trying to change
+            Group? group = user.Groups.FirstOrDefault(g => g.Id.Equals(id));
+            if (group == null) return NotFound($"No group with id {id} was found, or you are not a member of the group");
+
+            List<UpdateUserResult> results = new List<UpdateUserResult>();
+
+            foreach (string memberId in memberParams.add)
+            {
+                //check if the user id they have provided is valid and known
+                (bool isValidId, User member, IActionResult idError) = ValidateUserId(memberId);
+                if (!isValidId)
+                {
+                    results.Add(new UpdateUserResult()
+                    {
+                        UserId = memberId,
+                        Success = false,
+                        Message = idError.ToString() ?? "No content"
+                    });
+                    continue;
+                }
+
+                //check if the provided user id is not already a member of the group
+                if (group.Users.Any(u => u.Id.Equals(member.Id)))
+                {
+                    results.Add(new UpdateUserResult()
+                    {
+                        UserId = memberId,
+                        Success = false,
+                        Message = "User is already a member of the group"
+                    });
+                    continue;
+                }
+                //check if the provided member is not at their max number of groups
+                if (member.Groups.Count >= _settings.maxGroups)
+                {
+                    results.Add(new UpdateUserResult()
+                    {
+                        UserId = memberId,
+                        Success = false,
+                        Message = $"User cannot be a member of more than {_settings.maxGroups} groups (by design)"
+                    });
+                    continue;
+                }
+
+                //finally add the user to the group
+                Logger.Log($"Adding user {member.Id} to group {id}, requested by user {user.Id}");
+                group.Users.Add(member);
+
+                results.Add(new UpdateUserResult()
+                {
+                    UserId = memberId,
+                    Success = true,
+                    Message = $"{memberId} was added to the group"
+                });
+            }
+
+            foreach (string memberId in memberParams.remove)
+            {
+                //check if the user id they have provided is valid and known
+                (bool isValidId, User member, IActionResult idError) = ValidateUserId(memberId);
+                if (!isValidId)
+                {
+                    results.Add(new UpdateUserResult()
+                    {
+                        UserId = memberId,
+                        Success = false,
+                        Message = idError.ToString() ?? "No content"
+                    });
+                    continue;
+                }
+
+                //check if the provided user id is actually a member of the group
+                if (!group.Users.Any(u => u.Id.Equals(member.Id)))
+                {
+                    results.Add(new UpdateUserResult()
+                    {
+                        UserId = memberId,
+                        Success = false,
+                        Message = "User is not a member of the group"
+                    });
+                    continue;
+                }
+
+                //finally remove the user from the group
+                Logger.Log($"Removing user {member.Id} from group {id}, requested by user {user.Id}");
+                group.Users.Remove(member);
+
+                results.Add(new UpdateUserResult()
+                {
+                    UserId = memberId,
+                    Success = true,
+                    Message = $"{memberId} was removed to the group"
+                });
+            }
+
+            _context.SaveChanges();
+
+            return Ok(new
+            {
+                results,
+                GroupId = group.Id,
+                Success = true,
+                Message = $"Membership of {results.Count} users was updated"
+            });
+        }
+
         (bool isValid, User user, IActionResult error) ValidateUserId(string id)
         {
             if (!Guid.TryParse(id, out Guid guid))
@@ -283,6 +415,14 @@ namespace Logbook.Controllers
             }
 
             return (true, user, Ok());
+        }
+
+        private class UpdateUserResult
+        {
+            public string UserId { get; set; } = string.Empty;
+            public bool Success { get; set; } = false;
+            public string Message { get; set; } = string.Empty;
+
         }
     }
 }

@@ -56,6 +56,7 @@ namespace Logbook.Controllers
                 user.DisplayName,
                 user.Enabled,
                 user.CalendarName,
+                user.CanBeSource,
             });
         }
 

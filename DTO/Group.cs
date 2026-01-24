@@ -177,4 +177,20 @@ namespace Logbook.DTO.Group
         [RegularExpression("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")]
         public string MemberId { get; set; } = string.Empty;
     }
+
+    /// <summary>
+    /// Parameters that are passed to the update members endpoint
+    /// </summary>
+    public class ChangeMembers
+    {   
+        /// <summary>
+        /// An array of the members to add to the group
+        /// </summary>
+        public string[] add {get; set; }= [];
+
+        /// <summary>
+        /// An array of the members to remove from the group
+        /// </summary>
+        public string[] remove {get; set; }= [];
+    }
 }

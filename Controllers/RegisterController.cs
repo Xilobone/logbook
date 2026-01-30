@@ -97,12 +97,15 @@ namespace Logbook.Controllers
         [HttpGet("exchange")]
         public async Task<IActionResult> Exchange([FromQuery] string code, string state)
         {
+            Logger.Log("Hitting the exchange endpoint");
+
             string stateJson = _dataProtector.Unprotect(state);
             DTO.AuthState authState = JsonSerializer.Deserialize<DTO.AuthState>(stateJson)!;
 
             //check if state is issued more than five minutes ago
             if (authState.issuedAt.AddMinutes(MAX_STATE_AGE_MINUTES) < DateTimeOffset.UtcNow)
             {
+                Logger.Log("authorization request was expired");
                 return Unauthorized("Authorization request has expired");
             }
 
@@ -110,6 +113,7 @@ namespace Logbook.Controllers
 
             if (user == null)
             {
+                Logger.Log("State was invalid", Logger.LogLevel.Warning);
                 return Unauthorized("Invalid state");
             }
 

@@ -77,13 +77,11 @@ namespace Logbook.DTO.Group
         /// <summary>
         /// The default start time for events
         /// </summary>
-        [RegularExpression("^\\d{2}:\\d{2}$")]
         public TimeOnly StartTime { get; set; } = TimeOnly.MinValue;
 
         /// <summary>
         /// The default end time for events
         /// </summary>
-        [RegularExpression("^\\d{2}:\\d{2}$")]
         public TimeOnly EndTime { get; set; } = TimeOnly.MinValue;
 
         /// <summary>

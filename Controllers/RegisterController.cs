@@ -98,7 +98,7 @@ namespace Logbook.Controllers
         public async Task<IActionResult> Exchange([FromQuery] string code, string state)
         {
             Logger.Log("Hitting the exchange endpoint");
-
+            
             string stateJson = _dataProtector.Unprotect(state);
             DTO.AuthState authState = JsonSerializer.Deserialize<DTO.AuthState>(stateJson)!;
 

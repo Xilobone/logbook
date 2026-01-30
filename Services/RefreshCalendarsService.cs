@@ -33,7 +33,8 @@ namespace Logbook.Services
             LogbookDBContext context = scope.ServiceProvider.GetRequiredService<LogbookDBContext>();
             Graph.GraphClientProvider clientProvider = scope.ServiceProvider.GetRequiredService<Graph.GraphClientProvider>();
 
-            foreach (User user in context.Users)
+            List<User> users = context.Users.ToList();
+            foreach (User user in users)
             {
                 Logger.Log($"Going to update events of user {user.Id}");
                 if (!user.Enabled) continue;
@@ -55,6 +56,8 @@ namespace Logbook.Services
 
                 //for each group they are part of get the events of that group from the database and check if that event does exist
                 //in the users calendar, create it if it doesnt, or update it if necessary
+
+                List<Group> groups = user.Groups.ToList();
                 foreach (Group group in user.Groups)
                 {
                     List<Event> groupEvents = group.Events.ToList();

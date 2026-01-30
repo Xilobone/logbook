@@ -3,6 +3,7 @@ using ExcelDataReader;
 using Logbook.Data;
 using Logbook.Models;
 using Microsoft.Extensions.Options;
+using Microsoft.Kiota.Abstractions.Extensions;
 
 namespace Logbook.Services
 {
@@ -34,10 +35,11 @@ namespace Logbook.Services
             LogbookDBContext context = scope.ServiceProvider.GetRequiredService<LogbookDBContext>();
             Graph.GraphClientProvider clientProvider = scope.ServiceProvider.GetRequiredService<Graph.GraphClientProvider>();
 
-            foreach (Group group in context.Groups)
-            {
-                User? sourceUser = context.Users.Where(u => u.Id == group.SourceId).FirstOrDefault();
+            List<Group> groups = context.Groups.ToList();
 
+            foreach (Group group in groups)
+            {   
+                User? sourceUser = context.Users.Where(u => u.Id == group.SourceId).FirstOrDefault();
                 if (sourceUser == null)
                 {
                     Logger.Log($"Group {group.Name} has sourceId {group.SourceId}, but this user was not found", Logger.LogLevel.Warning);

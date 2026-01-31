@@ -99,8 +99,8 @@ namespace Logbook.Graph
         {
             Event graphEvent = new Event(
                 null,
-                $"{group.EventPrefix}{@event.Title}",
-                new EventBody("HTML", "<p>this is some text</p>"),
+                Macros.Fill(group.EventTitle,@event),
+                new EventBody("HTML", Macros.Fill(group.EventBody, @event)),
                 new EventTime(@event.StartTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC"),
                 new EventTime(@event.EndTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC")
                 );

@@ -93,7 +93,6 @@ if (builder.Environment.IsDevelopment())
 else
 {
     app.UseCors("Xilobone");
-
 }
 
 app.UseAuthentication();

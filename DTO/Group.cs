@@ -43,9 +43,14 @@ namespace Logbook.DTO.Group
         public string TimeZone { get; set; } = string.Empty;
 
         /// <summary>
-        /// The prefix to the event title
+        /// The title of events in this group, supports macros
         /// </summary>
-        public string? EventPrefix { get; set; } = string.Empty;
+        public string? EventTitle { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The body of events in this group, supports macros
+        /// </summary>
+        public string? EventBody { get; set; } = string.Empty;
 
     }
 
@@ -92,10 +97,16 @@ namespace Logbook.DTO.Group
         public string TimeZone { get; set; } = string.Empty;
 
         /// <summary>
-        /// The prefix to the event title
+        /// The title of events in this group, supports macros
         /// </summary>
         [MaxLength(50)]
-        public string? EventPrefix { get; set; } = string.Empty;
+        public string? EventTitle { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The body of events in this group, supports macros
+        /// </summary>
+        [MaxLength(2048)]
+        public string? EventBody { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -143,10 +154,16 @@ namespace Logbook.DTO.Group
         public string? TimeZone { get; set; }
 
         /// <summary>
-        /// The prefix to the event title
+        /// The title of events in this group, supports macros
         /// </summary>
         [MaxLength(50)]
-        public string? EventPrefix { get; set; }
+        public string? EventTitle { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The body of events in this group, supports macros
+        /// </summary>
+        [MaxLength(2048)]
+        public string? EventBody { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -180,15 +197,15 @@ namespace Logbook.DTO.Group
     /// Parameters that are passed to the update members endpoint
     /// </summary>
     public class ChangeMembers
-    {   
+    {
         /// <summary>
         /// An array of the members to add to the group
         /// </summary>
-        public string[] add {get; set; }= [];
+        public string[] add { get; set; } = [];
 
         /// <summary>
         /// An array of the members to remove from the group
         /// </summary>
-        public string[] remove {get; set; }= [];
+        public string[] remove { get; set; } = [];
     }
 }

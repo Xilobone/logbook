@@ -41,9 +41,15 @@ namespace Logbook.Models
         public string TimeZone { get; set; } = string.Empty;
 
         /// <summary>
-        /// The text to write before the event title
+        /// The title of the events of this group, supports macros
         /// </summary>
-        public string EventPrefix {get; set;} = string.Empty;
+        public string EventTitle {get; set; } = string.Empty;
+        // public string EventPrefix {get; set;} = string.Empty;
+
+        /// <summary>
+        /// The body of the events of this group, supports macros
+        /// </summary>
+        public string EventBody {get; set;} = string.Empty;
         /// <summary>
         /// A collection of all users in this group
         /// </summary>

@@ -65,7 +65,8 @@ namespace Logbook.Services
                     foreach (Event @event in groupEvents)
                     {
                         Event? existingEvent = calendarEvents
-                            .Where(e => e.Title.Equals($"{group.EventPrefix}{@event.Title}"))
+                            .Where(e => e.Title.Equals(Macros.Fill(group.EventTitle,@event)))
+                            .Where(e => e.Notes.Equals(Macros.Fill(group.EventBody,@event)))
                             .Where(e => e.StartTime.Equals(@event.StartTime))
                             .FirstOrDefault(e => e.EndTime.Equals(@event.EndTime));
 

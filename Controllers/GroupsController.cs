@@ -52,7 +52,8 @@ namespace Logbook.Controllers
                     StartTime = g.StartTime,
                     EndTime = g.EndTime,
                     TimeZone = g.TimeZone,
-                    EventPrefix = g.EventPrefix
+                    EventTitle = g.EventTitle,
+                    EventBody = g.EventBody
                 }).ToList();
 
                 return Ok(groups);
@@ -70,7 +71,8 @@ namespace Logbook.Controllers
                 StartTime = group.StartTime,
                 EndTime = group.EndTime,
                 TimeZone = group.TimeZone,
-                EventPrefix = group.EventPrefix
+                EventTitle = group.EventTitle,
+                EventBody = group.EventBody
             });
         }
 
@@ -111,7 +113,8 @@ namespace Logbook.Controllers
                 StartTime = groupRequest.StartTime,
                 EndTime = groupRequest.EndTime,
                 TimeZone = groupRequest.TimeZone,
-                EventPrefix = groupRequest.EventPrefix ?? "",
+                EventTitle = groupRequest.EventTitle ?? "${EVENT.TITLE}",
+                EventBody = groupRequest.EventBody ?? "${EVENT.NOTES}",
             };
 
             _context.Groups.Add(group);
@@ -147,7 +150,8 @@ namespace Logbook.Controllers
             if (!string.IsNullOrEmpty(updateParam.DisplayName)) group.Name = updateParam.DisplayName;
             if (!string.IsNullOrEmpty(updateParam.FilePath)) group.FilePath = updateParam.FilePath;
             if (!string.IsNullOrEmpty(updateParam.TimeZone)) group.TimeZone = updateParam.TimeZone;
-            if (!string.IsNullOrEmpty(updateParam.EventPrefix)) group.EventPrefix = updateParam.EventPrefix;
+            if (!string.IsNullOrEmpty(updateParam.EventTitle)) group.EventTitle = updateParam.EventTitle;
+            if (!string.IsNullOrEmpty(updateParam.EventBody)) group.EventBody = updateParam.EventBody;
             if (updateParam.StartTime != null) group.StartTime = (TimeOnly)updateParam.StartTime;
             if (updateParam.EndTime != null) group.EndTime = (TimeOnly)updateParam.EndTime;
 

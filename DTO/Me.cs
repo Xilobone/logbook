@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Logbook.Models;
 
 namespace Logbook.DTO
 {
@@ -25,5 +26,17 @@ namespace Logbook.DTO
         [MinLength(1)]
         [MaxLength(50)]
         public string? CalendarName { get; set; }
+
+        /// <summary>
+        /// The alias of the user to use for schedule event matching
+        /// </summary>
+        [MinLength(1)]
+        [MaxLength(50)]
+        public string? Alias { get; set; }
+
+        /// <summary>
+        /// The type of matching to perform
+        /// </summary>
+        public User.AliasMatching? AliasMatchingType {get; set;}
     }
 }

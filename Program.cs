@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Logbook;
 using Logbook.Data;
 using Logbook.Services;
@@ -14,7 +15,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter()
+        );
+    });
 
 if (builder.Environment.IsDevelopment())
 {

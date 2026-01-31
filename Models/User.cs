@@ -1,12 +1,29 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Logbook.Models
 {
     /// <summary>
     /// Represents a user of the program
     /// </summary>
     public class User
-    {
+    {   
+        /// <summary>
+        /// The different matching types for the users alias
+        /// </summary>
+        public enum AliasMatching
+        {   
+            /// <summary>
+            /// Matches only fields that are exactly equal to the alias
+            /// </summary>
+            Strict,
+            /// <summary>
+            /// Matches all fields that contain the alias
+            /// </summary>
+            Loose,
+
+            /// <summary>
+            /// Matches all fields that match the regular expression
+            /// </summary>
+            Regex
+        }
         /// <summary>
         /// The unique identifier of the user, corresponds with the Entra ID
         /// </summary>
@@ -22,6 +39,15 @@ namespace Logbook.Models
         /// </summary>
         public string DisplayName { get; set; } = string.Empty;
 
+        /// <summary>
+        /// The users alias in schedule files
+        /// </summary>
+        public string Alias {get; set;} = string.Empty;
+
+        /// <summary>
+        /// The type of matching that will be used for the alias
+        /// </summary>
+        public AliasMatching AliasMatchingType {get; set; }= AliasMatching.Strict;
         /// <summary>
         /// The name of the calendar that is managed
         /// </summary>

@@ -57,6 +57,8 @@ namespace Logbook.Controllers
                 user.Enabled,
                 user.CalendarName,
                 user.CanBeSource,
+                user.Alias,
+                user.AliasMatchingType,
             });
         }
 
@@ -74,6 +76,8 @@ namespace Logbook.Controllers
             if (config.Enabled != null) user.Enabled = (bool)config.Enabled;
             if (!string.IsNullOrEmpty(config.DisplayName)) user.DisplayName = config.DisplayName!;
             if (!string.IsNullOrEmpty(config.CalendarName)) user.CalendarName = config.CalendarName!;
+            if (!string.IsNullOrEmpty(config.Alias)) user.Alias = config.Alias!;
+            if (config.AliasMatchingType != null) user.AliasMatchingType = (User.AliasMatching) config.AliasMatchingType;
 
             _context.SaveChanges();
             return Ok(new

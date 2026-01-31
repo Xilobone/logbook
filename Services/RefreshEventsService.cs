@@ -78,6 +78,7 @@ namespace Logbook.Services
                         DateTime endTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(group.EndTime.ToTimeSpan()), TimeZoneInfo.FindSystemTimeZoneById(group.TimeZone));
 
                         string title = row[1].ToString() ?? "No title";
+                        string organizer = row[2].ToString() ?? "";
                         string notes = row[9].ToString() ?? "";
        
                         events.Add(new Event()
@@ -86,7 +87,8 @@ namespace Logbook.Services
                             EndTime = endTime,
                             Title = title,
                             Group = group,
-                            Notes = notes
+                            Notes = notes,
+                            Organizer = organizer
                         });
                     }
                     else continue;
@@ -125,6 +127,7 @@ namespace Logbook.Services
                     //update fields
                     existingEvent.Title = evnt.Title;
                     existingEvent.Notes = evnt.Notes;
+                    existingEvent.Organizer = evnt.Organizer;
 
 
                     allExistingEvents.Remove(existingEvent);

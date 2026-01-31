@@ -34,6 +34,11 @@ namespace Logbook.Models
         public string Notes {get; set;} = string.Empty;
 
         /// <summary>
+        /// The organizer of the event
+        /// </summary>
+        public string Organizer {get; set;} = string.Empty;
+
+        /// <summary>
         /// The Group the event belongs to
         /// </summary>
         public virtual Group Group { get; set; } = Group.None;
@@ -67,6 +72,7 @@ namespace Logbook.Models
             if (!EndTime.Equals(@event.EndTime)) return false;
             if (!Title.Equals(@event.Title)) return false;
             if (!Notes.Equals(@event.Notes)) return false;
+            if (!Organizer.Equals(@event.Organizer)) return false;
             if (!Group.Id.Equals(@event.Group.Id)) return false;
 
             return true;

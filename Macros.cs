@@ -7,7 +7,13 @@ namespace Logbook
     /// </summary>
     public class Macros
     {
-
+        static readonly IReadOnlyDictionary<string, Func<Event, string>> macros =
+        new Dictionary<string, Func<Event, string>>
+        {
+            ["EVENT.TITLE"] = e => e.Title,
+            ["EVENT.NOTES"] = e => e.Notes,
+            ["EVENT.ORGANIZER"] = e => e.Organizer
+        };
         /// <summary>
         /// Fills the given template text with the macros
         /// </summary>
@@ -16,15 +22,9 @@ namespace Logbook
         /// <returns>The filled text</returns>
         public static string Fill(string text, Event @event)
         {
-            Dictionary<string, string> macros = new Dictionary<string, string>()
+            foreach (KeyValuePair<string, Func<Event, string>> macro in macros)
             {
-                {"EVENT.TITLE", @event.Title},
-                {"EVENT.NOTES", @event.Notes},
-            };
-
-            foreach(KeyValuePair<string,string> macro in macros)
-            {
-                text = text.Replace($"${{{macro.Key}}}",macro.Value);
+                text = text.Replace($"${{{macro.Key}}}", macro.Value(@event));
             }
 
             return text;

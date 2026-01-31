@@ -71,15 +71,15 @@ namespace Logbook.Services
                 foreach (DataRow row in table.Rows)
                 {
 
-                    if (row[0] is DateTime dateTime)
+                    if (row[1] is DateTime dateTime)
                     {
                         //Start and endtime in utc
                         DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(group.StartTime.ToTimeSpan()), TimeZoneInfo.FindSystemTimeZoneById(group.TimeZone));
                         DateTime endTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(group.EndTime.ToTimeSpan()), TimeZoneInfo.FindSystemTimeZoneById(group.TimeZone));
 
-                        string title = row[1].ToString() ?? "No title";
-                        string organizer = row[2].ToString() ?? "";
-                        string notes = row[9].ToString() ?? "";
+                        string title = row[2].ToString() ?? "No title";
+                        string organizer = row[3].ToString() ?? "";
+                        string notes = row[10].ToString() ?? "";
        
                         events.Add(new Event()
                         {

@@ -54,7 +54,7 @@ namespace Logbook.Models
         /// <returns>The string representation of the event</returns>
         public override string ToString()
         {
-            return $"({StartTime} - {EndTime}) {Title}";
+            return $"({StartTime} - {EndTime}) {Title} [{Organizer}, {Notes}]";
         }
 
         /// <summary>

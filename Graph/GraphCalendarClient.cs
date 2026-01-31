@@ -41,7 +41,7 @@ namespace Logbook.Graph
         /// <returns>Wether the calendar was successfully created or not</returns>
         public async Task<bool> Create(string calendarName)
         {
-            if(string.IsNullOrEmpty(calendarName)) return false;
+            if (string.IsNullOrEmpty(calendarName)) return false;
             if (await DoesExist(calendarName)) return false;
 
             Calendar calendar = new Calendar(null, calendarName);
@@ -99,7 +99,7 @@ namespace Logbook.Graph
         {
             Event graphEvent = new Event(
                 null,
-                Macros.Fill(group.EventTitle,@event),
+                Macros.Fill(group.EventTitle, @event),
                 new EventBody("HTML", Macros.Fill(group.EventBody, @event)),
                 new EventTime(@event.StartTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC"),
                 new EventTime(@event.EndTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC")
@@ -169,9 +169,9 @@ namespace Logbook.Graph
         /// </summary>
         /// <param name="calendarName">The name of the calendar to get</param>
         /// <returns>The users calendar events</returns>
-        public async Task<List<Models.Event>> GetEvents(string calendarName)
+        public async Task<List<Event>> GetEvents(string calendarName)
         {
-            List<Models.Event> events = new List<Models.Event>();
+            List<Event> events = new List<Event>();
 
             string? calendarId = await GetId(calendarName);
             if (string.IsNullOrEmpty(calendarId)) return events;
@@ -179,21 +179,16 @@ namespace Logbook.Graph
             string eventResponse = await _graphClient.MakeGraphRequestGet($"me/calendars/{calendarId}/events");
 
             QueryResponse<Event> eventCollection = JsonSerializer.Deserialize<QueryResponse<Event>>(eventResponse)!;
-            foreach (Event e in eventCollection.Values)
-            {
-                events.Add(e.ToLogbookEvent());
-            }
+            events.AddRange(eventCollection.Values);
 
             while (!string.IsNullOrEmpty(eventCollection.NextUrl))
             {
                 eventResponse = await _graphClient.MakeGraphRequestGet(eventCollection.NextUrl, false);
 
                 eventCollection = JsonSerializer.Deserialize<QueryResponse<Event>>(eventResponse)!;
-                foreach (Event e in eventCollection.Values)
-                {
-                    events.Add(e.ToLogbookEvent());
-                }
+                events.AddRange(eventCollection.Values);
             }
+            
             return events;
         }
     }

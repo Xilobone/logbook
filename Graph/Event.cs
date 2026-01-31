@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Logbook.Graph
 {
@@ -19,31 +18,7 @@ namespace Logbook.Graph
         [property: JsonPropertyName("start")] EventTime Start,
         [property: JsonPropertyName("end")] EventTime End
 
-    )
-    {
-        /// <summary>
-        /// Creates a Logbook model event based on the graph event info
-        /// </summary>
-        /// <returns>A logbook event</returns>
-        public Models.Event ToLogbookEvent()
-        {
-            TimeZoneInfo startTimezone = TimeZoneInfo.FindSystemTimeZoneById(Start.timeZone);
-            DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(DateTime.Parse(Start.DateTime), startTimezone);
-
-            TimeZoneInfo endTimezone = TimeZoneInfo.FindSystemTimeZoneById(End.timeZone);
-            DateTime endTime = TimeZoneInfo.ConvertTimeToUtc(DateTime.Parse(End.DateTime), endTimezone);
-
-            Models.Event @event = new Models.Event()
-            {
-                Title = Subject,
-                StartTime = startTime,
-                EndTime = endTime,
-                CalendarEventId = Id,
-            };
-
-            return @event;
-        }
-    };
+    );
 
     /// <summary>
     /// Represents the body of an event from Microsoft Graph

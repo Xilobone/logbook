@@ -3,6 +3,7 @@ using System;
 using Logbook.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace logbook.Migrations
 {
     [DbContext(typeof(LogbookDBContext))]
-    partial class LogbookDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260203210625_EventTemplates3")]
+    partial class EventTemplates3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,9 +86,6 @@ namespace logbook.Migrations
                     b.Property<string>("EventTitle")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("ShowAs")
-                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -180,11 +180,17 @@ namespace logbook.Migrations
                     b.Property<int>("AliasMatchingType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("AttendingStatus")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("CalendarName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("CanBeSource")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DeclinedStatus")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("DisplayName")
@@ -197,6 +203,9 @@ namespace logbook.Migrations
                     b.Property<string>("RefreshToken")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("TentativeStatus")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Username")
                         .IsRequired()

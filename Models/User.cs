@@ -4,12 +4,12 @@ namespace Logbook.Models
     /// Represents a user of the program
     /// </summary>
     public class User
-    {   
+    {
         /// <summary>
         /// The different matching types for the users alias
         /// </summary>
         public enum AliasMatching
-        {   
+        {
             /// <summary>
             /// Matches only fields that are exactly equal to the alias
             /// </summary>
@@ -24,6 +24,7 @@ namespace Logbook.Models
             /// </summary>
             Regex
         }
+
         /// <summary>
         /// The unique identifier of the user, corresponds with the Entra ID
         /// </summary>
@@ -42,12 +43,12 @@ namespace Logbook.Models
         /// <summary>
         /// The users alias in schedule files
         /// </summary>
-        public string Alias {get; set;} = string.Empty;
+        public string Alias { get; set; } = string.Empty;
 
         /// <summary>
         /// The type of matching that will be used for the alias
         /// </summary>
-        public AliasMatching AliasMatchingType {get; set; }= AliasMatching.Strict;
+        public AliasMatching AliasMatchingType { get; set; } = AliasMatching.Strict;
         /// <summary>
         /// The name of the calendar that is managed
         /// </summary>
@@ -61,7 +62,7 @@ namespace Logbook.Models
         /// <summary>
         /// Whether the user can be the source for the schedule files
         /// </summary>
-        public bool CanBeSource {get; set; } = false;
+        public bool CanBeSource { get; set; } = false;
 
         /// <summary>
         /// The groups the user belongs to

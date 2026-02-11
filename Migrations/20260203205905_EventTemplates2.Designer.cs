@@ -3,6 +3,7 @@ using System;
 using Logbook.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace logbook.Migrations
 {
     [DbContext(typeof(LogbookDBContext))]
-    partial class LogbookDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260203205905_EventTemplates2")]
+    partial class EventTemplates2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,9 +87,6 @@ namespace logbook.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ShowAs")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.ToTable("EventTemplate");
@@ -120,7 +120,8 @@ namespace logbook.Migrations
 
                     b.HasIndex("AttendingId");
 
-                    b.HasIndex("GroupId");
+                    b.HasIndex("GroupId")
+                        .IsUnique();
 
                     b.HasIndex("TentativeId");
 
@@ -180,11 +181,17 @@ namespace logbook.Migrations
                     b.Property<int>("AliasMatchingType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("AttendingStatus")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("CalendarName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("CanBeSource")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DeclinedStatus")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("DisplayName")
@@ -197,6 +204,9 @@ namespace logbook.Migrations
                     b.Property<string>("RefreshToken")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("TentativeStatus")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -242,8 +252,8 @@ namespace logbook.Migrations
                         .IsRequired();
 
                     b.HasOne("Logbook.Models.Group", "Group")
-                        .WithMany("EventTemplateSets")
-                        .HasForeignKey("GroupId")
+                        .WithOne("EventTemplates")
+                        .HasForeignKey("Logbook.Models.EventTemplateSet", "GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -276,7 +286,8 @@ namespace logbook.Migrations
 
             modelBuilder.Entity("Logbook.Models.Group", b =>
                 {
-                    b.Navigation("EventTemplateSets");
+                    b.Navigation("EventTemplates")
+                        .IsRequired();
 
                     b.Navigation("Events");
                 });

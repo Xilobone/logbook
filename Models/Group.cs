@@ -41,16 +41,6 @@ namespace Logbook.Models
         public string TimeZone { get; set; } = string.Empty;
 
         /// <summary>
-        /// The title of the events of this group, supports macros
-        /// </summary>
-        public string EventTitle {get; set; } = string.Empty;
-        // public string EventPrefix {get; set;} = string.Empty;
-
-        /// <summary>
-        /// The body of the events of this group, supports macros
-        /// </summary>
-        public string EventBody {get; set;} = string.Empty;
-        /// <summary>
         /// A collection of all users in this group
         /// </summary>
         public virtual ICollection<User> Users { get; set; } = new List<User>();
@@ -61,8 +51,22 @@ namespace Logbook.Models
         public virtual ICollection<Event> Events { get; set; } = new List<Event>();
 
         /// <summary>
+        /// The collection of event template sets for users in this group, and the default template
+        /// </summary>
+        public virtual ICollection<EventTemplateSet> EventTemplateSets {get; set;} = new List<EventTemplateSet>();
+        
+        /// <summary>
         /// Empty Group to indicate no group is present
         /// </summary>
         public static readonly Group None = new();
+
+        /// <summary>
+        /// Gets the default event template set for this group
+        /// </summary>
+        /// <returns></returns>
+        public EventTemplateSet GetDefaultEventTemplateSet()
+        {
+            return EventTemplateSets.First(t => t.User == null);
+        }
     }
 }

@@ -99,10 +99,13 @@ namespace Logbook.Graph
         {
             Event graphEvent = new Event(
                 null,
-                Macros.Fill(group.EventTitle, @event),
-                new EventBody("HTML", Macros.Fill(group.EventBody, @event)),
+                // Macros.Fill(group.EventTitle, @event),
+                Macros.Fill("", @event),
+                // new EventBody("HTML", Macros.Fill(group.EventBody, @event)),
+                new EventBody("HTML", Macros.Fill("", @event)),
                 new EventTime(@event.StartTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC"),
-                new EventTime(@event.EndTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC")
+                new EventTime(@event.EndTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC"),
+                Models.EventStatus.Free
                 );
 
             string json = JsonSerializer.Serialize(graphEvent);
@@ -138,7 +141,7 @@ namespace Logbook.Graph
                 );
 
             string json = JsonSerializer.Serialize(graphEvent);
-
+            Logger.Log(graphEvent);
             string? calendarId = await GetId(calendarName);
             if (string.IsNullOrEmpty(calendarId)) return false;
 

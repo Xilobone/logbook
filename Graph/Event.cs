@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Logbook.Models;
 
 namespace Logbook.Graph
 {
@@ -10,13 +11,16 @@ namespace Logbook.Graph
     /// <param name="Body">The body of the event</param>
     /// <param name="Start">The start time of the event</param>
     /// <param name="End">The end time of the event</param>
+    /// <param name="ShowAs">The availability to show the event as</param>
     public sealed record Event
     (
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)][property: JsonPropertyName("id")] string? Id,
         [property: JsonPropertyName("subject")] string Subject,
         [property: JsonPropertyName("body")] EventBody Body,
         [property: JsonPropertyName("start")] EventTime Start,
-        [property: JsonPropertyName("end")] EventTime End
+        [property: JsonPropertyName("end")] EventTime End,
+        [property: JsonPropertyName("showAs")] EventStatus ShowAs = EventStatus.Busy
+
 
     );
 

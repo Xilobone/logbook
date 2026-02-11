@@ -67,7 +67,8 @@ namespace Logbook.Services
                     foreach (Event @event in groupEvents)
                     {
                         Graph.Event? existingEvent = calendarEvents
-                            .Where(e => e.Subject.Equals(Macros.Fill(group.EventTitle, @event)))
+                            // .Where(e => e.Subject.Equals(Macros.Fill(group.EventTitle, @event)))
+                            .Where(e => e.Subject.Equals(Macros.Fill("", @event)))
                             .Where(e => DoesBodyMatch(e, @event, group))
                             .Where(e => DoesTimeMatch(e.Start,@event.StartTime))
                             .FirstOrDefault(e => DoesTimeMatch(e.End,@event.EndTime));
@@ -100,7 +101,8 @@ namespace Logbook.Services
         bool DoesBodyMatch(Graph.Event graphEvent, Models.Event @event, Models.Group group)
         {
             string graphBody = NormalizeHtml(graphEvent.Body.Content);
-            string eventBody = Macros.Fill(group.EventBody, @event);
+            // string eventBody = Macros.Fill(group.EventBody, @event);
+            string eventBody = Macros.Fill("", @event);
 
             return graphBody.Equals(eventBody);
         }

@@ -3,6 +3,7 @@ using System;
 using Logbook.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace logbook.Migrations
 {
     [DbContext(typeof(LogbookDBContext))]
-    partial class LogbookDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260203181921_AttendanceStatus")]
+    partial class AttendanceStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,10 +73,13 @@ namespace logbook.Migrations
                     b.ToTable("Events");
                 });
 
-            modelBuilder.Entity("Logbook.Models.EventTemplate", b =>
+            modelBuilder.Entity("Logbook.Models.Group", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeOnly>("EndTime")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("EventBody")
@@ -82,62 +88,6 @@ namespace logbook.Migrations
 
                     b.Property<string>("EventTitle")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ShowAs")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("EventTemplate");
-                });
-
-            modelBuilder.Entity("Logbook.Models.EventTemplateSet", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("AttendingId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("DifferentiateOnAttendance")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("GroupId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("TentativeId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UnavailableId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AttendingId");
-
-                    b.HasIndex("GroupId");
-
-                    b.HasIndex("TentativeId");
-
-                    b.HasIndex("UnavailableId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("EventTemplateSet");
-                });
-
-            modelBuilder.Entity("Logbook.Models.Group", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<TimeOnly>("EndTime")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FilePath")
@@ -180,11 +130,17 @@ namespace logbook.Migrations
                     b.Property<int>("AliasMatchingType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("AttendingStatus")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("CalendarName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("CanBeSource")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DeclinedStatus")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("DisplayName")
@@ -197,6 +153,9 @@ namespace logbook.Migrations
                     b.Property<string>("RefreshToken")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("TentativeStatus")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -233,51 +192,8 @@ namespace logbook.Migrations
                     b.Navigation("Group");
                 });
 
-            modelBuilder.Entity("Logbook.Models.EventTemplateSet", b =>
-                {
-                    b.HasOne("Logbook.Models.EventTemplate", "Attending")
-                        .WithMany()
-                        .HasForeignKey("AttendingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Logbook.Models.Group", "Group")
-                        .WithMany("EventTemplateSets")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Logbook.Models.EventTemplate", "Tentative")
-                        .WithMany()
-                        .HasForeignKey("TentativeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Logbook.Models.EventTemplate", "Unavailable")
-                        .WithMany()
-                        .HasForeignKey("UnavailableId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Logbook.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("Attending");
-
-                    b.Navigation("Group");
-
-                    b.Navigation("Tentative");
-
-                    b.Navigation("Unavailable");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Logbook.Models.Group", b =>
                 {
-                    b.Navigation("EventTemplateSets");
-
                     b.Navigation("Events");
                 });
 #pragma warning restore 612, 618

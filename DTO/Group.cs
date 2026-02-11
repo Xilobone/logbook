@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Logbook.Models;
 
 namespace Logbook.DTO.Group
 {
@@ -42,17 +43,12 @@ namespace Logbook.DTO.Group
         /// </summary>
         public string TimeZone { get; set; } = string.Empty;
 
-        /// <summary>
-        /// The title of events in this group, supports macros
-        /// </summary>
-        public string? EventTitle { get; set; } = string.Empty;
+        public EventTemplateSet.Get EventTemplateSet {get;set;} = DTO.EventTemplateSet.Get.None;
 
-        /// <summary>
-        /// The body of events in this group, supports macros
-        /// </summary>
-        public string? EventBody { get; set; } = string.Empty;
+
 
     }
+
 
     /// <summary>
     /// Represents a group create requested to the application

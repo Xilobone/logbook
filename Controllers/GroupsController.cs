@@ -52,8 +52,6 @@ namespace Logbook.Controllers
                     StartTime = g.StartTime,
                     EndTime = g.EndTime,
                     TimeZone = g.TimeZone,
-                    EventTitle = g.EventTitle,
-                    EventBody = g.EventBody
                 }).ToList();
 
                 return Ok(groups);
@@ -62,6 +60,7 @@ namespace Logbook.Controllers
             Group? group = user.Groups.FirstOrDefault(g => g.Id.Equals(id));
             if (group == null) return NotFound($"No group with id {id} was found, or you are not a member of the group");
 
+            EventTemplateSet eventTemplateSet = group.GetDefaultEventTemplateSet();
             return Ok(new DTO.Group.Get()
             {
                 Id = group.Id,
@@ -71,8 +70,11 @@ namespace Logbook.Controllers
                 StartTime = group.StartTime,
                 EndTime = group.EndTime,
                 TimeZone = group.TimeZone,
-                EventTitle = group.EventTitle,
-                EventBody = group.EventBody
+                EventTemplateSet = new DTO.EventTemplateSet.Get()
+                {
+                    DifferentiateOnAttendance = eventTemplateSet.DifferentiateOnAttendance,
+                    
+                }
             });
         }
 
@@ -113,8 +115,8 @@ namespace Logbook.Controllers
                 StartTime = groupRequest.StartTime,
                 EndTime = groupRequest.EndTime,
                 TimeZone = groupRequest.TimeZone,
-                EventTitle = groupRequest.EventTitle ?? "${EVENT.TITLE}",
-                EventBody = groupRequest.EventBody ?? "${EVENT.NOTES}",
+                // EventTitle = groupRequest.EventTitle ?? "${EVENT.TITLE}",
+                // EventBody = groupRequest.EventBody ?? "${EVENT.NOTES}",
             };
 
             _context.Groups.Add(group);
@@ -150,8 +152,8 @@ namespace Logbook.Controllers
             if (!string.IsNullOrEmpty(updateParam.DisplayName)) group.Name = updateParam.DisplayName;
             if (!string.IsNullOrEmpty(updateParam.FilePath)) group.FilePath = updateParam.FilePath;
             if (!string.IsNullOrEmpty(updateParam.TimeZone)) group.TimeZone = updateParam.TimeZone;
-            if (!string.IsNullOrEmpty(updateParam.EventTitle)) group.EventTitle = updateParam.EventTitle;
-            if (!string.IsNullOrEmpty(updateParam.EventBody)) group.EventBody = updateParam.EventBody;
+            // if (!string.IsNullOrEmpty(updateParam.EventTitle)) group.EventTitle = updateParam.EventTitle;
+            // if (!string.IsNullOrEmpty(updateParam.EventBody)) group.EventBody = updateParam.EventBody;
             if (updateParam.StartTime != null) group.StartTime = (TimeOnly)updateParam.StartTime;
             if (updateParam.EndTime != null) group.EndTime = (TimeOnly)updateParam.EndTime;
 

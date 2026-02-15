@@ -11,16 +11,6 @@ namespace Logbook.Models
         public Guid Id { get; set; }
 
         /// <summary>
-        /// The group the event template set belongs to
-        /// </summary>
-        public virtual Group Group { get; set; } = Group.None;
-
-        /// <summary>
-        /// The user the event template set belongs to, can be null if the template is a group default
-        /// </summary>
-        public virtual User? User { get; set; }
-
-        /// <summary>
         /// Whether to use different templates depending on the attendance, if 
         /// false only Attending will be used
         /// </summary>

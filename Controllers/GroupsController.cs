@@ -3,7 +3,6 @@ using Logbook.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Microsoft.Graph;
 
 namespace Logbook.Controllers
 {
@@ -38,21 +37,15 @@ namespace Logbook.Controllers
         [HttpGet("{id:guid?}")]
         public async Task<IActionResult> GetGroups(Guid? id)
         {
+            Logger.Log("getting groups");
             (bool isValidRequest, User user, IActionResult requestError) = await Util.Auth.ValidateRequest(this, _context);
             if (!isValidRequest) return requestError;
 
             if (id == null)
             {
-                List<DTO.Group.Get> groups = user.Groups.Select(g => new DTO.Group.Get()
-                {
-                    Id = g.Id,
-                    DisplayName = g.Name,
-                    SourceId = g.SourceId,
-                    FilePath = g.FilePath,
-                    StartTime = g.StartTime,
-                    EndTime = g.EndTime,
-                    TimeZone = g.TimeZone,
-                }).ToList();
+                Logger.Log("id is null");
+
+                List<DTO.Group.Get> groups = user.Groups.Select(g => Util.ModelConverter.ToDTO.Group(g)).ToList();
 
                 return Ok(groups);
             }
@@ -60,22 +53,8 @@ namespace Logbook.Controllers
             Group? group = user.Groups.FirstOrDefault(g => g.Id.Equals(id));
             if (group == null) return NotFound($"No group with id {id} was found, or you are not a member of the group");
 
-            EventTemplateSet eventTemplateSet = group.GetDefaultEventTemplateSet();
-            return Ok(new DTO.Group.Get()
-            {
-                Id = group.Id,
-                DisplayName = group.Name,
-                SourceId = group.SourceId,
-                FilePath = group.FilePath,
-                StartTime = group.StartTime,
-                EndTime = group.EndTime,
-                TimeZone = group.TimeZone,
-                EventTemplateSet = new DTO.EventTemplateSet.Get()
-                {
-                    DifferentiateOnAttendance = eventTemplateSet.DifferentiateOnAttendance,
-                    
-                }
-            });
+            return Ok(Util.ModelConverter.ToDTO.Group(group));
+
         }
 
         /// <summary>
@@ -107,17 +86,7 @@ namespace Logbook.Controllers
                 });
             }
 
-            Group group = new Group()
-            {
-                Name = groupRequest.DisplayName,
-                SourceId = source.Id,
-                FilePath = groupRequest.FilePath,
-                StartTime = groupRequest.StartTime,
-                EndTime = groupRequest.EndTime,
-                TimeZone = groupRequest.TimeZone,
-                // EventTitle = groupRequest.EventTitle ?? "${EVENT.TITLE}",
-                // EventBody = groupRequest.EventBody ?? "${EVENT.NOTES}",
-            };
+            Group group = Util.ModelConverter.ToModel.Group(groupRequest);
 
             _context.Groups.Add(group);
             group.Users.Add(user);
@@ -152,11 +121,33 @@ namespace Logbook.Controllers
             if (!string.IsNullOrEmpty(updateParam.DisplayName)) group.Name = updateParam.DisplayName;
             if (!string.IsNullOrEmpty(updateParam.FilePath)) group.FilePath = updateParam.FilePath;
             if (!string.IsNullOrEmpty(updateParam.TimeZone)) group.TimeZone = updateParam.TimeZone;
-            // if (!string.IsNullOrEmpty(updateParam.EventTitle)) group.EventTitle = updateParam.EventTitle;
-            // if (!string.IsNullOrEmpty(updateParam.EventBody)) group.EventBody = updateParam.EventBody;
             if (updateParam.StartTime != null) group.StartTime = (TimeOnly)updateParam.StartTime;
             if (updateParam.EndTime != null) group.EndTime = (TimeOnly)updateParam.EndTime;
 
+            if (updateParam.EventTemplateSet != null)
+            {
+                group.EventTemplateSet.DifferentiateOnAttendance = updateParam.EventTemplateSet.DifferentiateOnAttendance;
+                if (updateParam.EventTemplateSet.Attending != null)
+                {
+                    group.EventTemplateSet.Attending.ShowAs = Enum.Parse<EventStatus>(updateParam.EventTemplateSet.Attending.ShowAs);
+                    group.EventTemplateSet.Attending.Title = updateParam.EventTemplateSet.Attending.Title;
+                    group.EventTemplateSet.Attending.Body = updateParam.EventTemplateSet.Attending.Body;
+                }
+
+                if (updateParam.EventTemplateSet.Tentative != null)
+                {
+                    group.EventTemplateSet.Tentative.ShowAs = Enum.Parse<EventStatus>(updateParam.EventTemplateSet.Tentative.ShowAs);
+                    group.EventTemplateSet.Tentative.Title = updateParam.EventTemplateSet.Tentative.Title;
+                    group.EventTemplateSet.Tentative.Body = updateParam.EventTemplateSet.Tentative.Body;
+                }
+
+                if (updateParam.EventTemplateSet.Unavailable != null)
+                {
+                    group.EventTemplateSet.Unavailable.ShowAs = Enum.Parse<EventStatus>(updateParam.EventTemplateSet.Unavailable.ShowAs);
+                    group.EventTemplateSet.Unavailable.Title = updateParam.EventTemplateSet.Unavailable.Title;
+                    group.EventTemplateSet.Unavailable.Body = updateParam.EventTemplateSet.Unavailable.Body;
+                }
+            }
             if (!string.IsNullOrEmpty(updateParam.SourceId))
             {
                 (bool isValid, User source, IActionResult error) = ValidateUserId(updateParam.SourceId);

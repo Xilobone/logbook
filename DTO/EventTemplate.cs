@@ -1,10 +1,17 @@
-namespace Logbook.DTO.EventTemplate
+
+using System.ComponentModel.DataAnnotations;
+
+namespace Logbook.DTO
 {
-    public class Get
+    /// <summary>
+    /// Represents an event template as a DTO object
+    /// </summary>
+    public class EventTemplate
     {
         /// <summary>
         /// Determines how to show the event in the Outlook calendar, either busy, tentative or free
         /// </summary>
+        [RegularExpression("^(?i)(busy|free|tentative)$")]
         public string ShowAs {get; set;} = "busy";
         /// <summary>
         /// The title of the events of this group, supports macros
@@ -19,6 +26,8 @@ namespace Logbook.DTO.EventTemplate
         /// <summary>
         /// The default empty template
         /// </summary>
-        public static readonly Get None = new();
+        public static readonly EventTemplate None = new();
     }
+
+
 }

@@ -43,10 +43,10 @@ namespace Logbook.DTO.Group
         /// </summary>
         public string TimeZone { get; set; } = string.Empty;
 
-        public EventTemplateSet.Get EventTemplateSet {get;set;} = DTO.EventTemplateSet.Get.None;
-
-
-
+        /// <summary>
+        /// The event template set of this group
+        /// </summary>
+        public EventTemplateSet EventTemplateSet {get;set;} = EventTemplateSet.None;
     }
 
 
@@ -93,16 +93,9 @@ namespace Logbook.DTO.Group
         public string TimeZone { get; set; } = string.Empty;
 
         /// <summary>
-        /// The title of events in this group, supports macros
+        /// The event template set of this group
         /// </summary>
-        [MaxLength(50)]
-        public string? EventTitle { get; set; } = string.Empty;
-
-        /// <summary>
-        /// The body of events in this group, supports macros
-        /// </summary>
-        [MaxLength(2048)]
-        public string? EventBody { get; set; } = string.Empty;
+        public EventTemplateSet EventTemplateSet {get; set;} = EventTemplateSet.None;
     }
 
     /// <summary>
@@ -160,6 +153,11 @@ namespace Logbook.DTO.Group
         /// </summary>
         [MaxLength(2048)]
         public string? EventBody { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The event template set of this group
+        /// </summary>
+        public EventTemplateSet? EventTemplateSet {get; set;} =  EventTemplateSet.None;
     }
 
     /// <summary>

@@ -18,12 +18,20 @@ namespace Logbook.Services
         /// </summary>
         protected override string configName { get => "RefreshEvents"; }
 
+        static Dictionary<string, EventAttendance.AttendanceStatus> AttendanceStatusMap = new Dictionary<string, EventAttendance.AttendanceStatus>()
+        {
+            {"Ja", EventAttendance.AttendanceStatus.Attending},
+            {"Miss", EventAttendance.AttendanceStatus.Tentative},
+            {"Nee", EventAttendance.AttendanceStatus.Unavailable},
+            {"", EventAttendance.AttendanceStatus.Unknown}
+        };
+
         /// <summary>
         /// Creates a new refresh service
         /// </summary>
         /// <param name="serviceProvider">The service provider to use to create scoped contexts</param>
         /// <param name="config">The configuration to use</param>
-        public RefreshEventsService(IServiceProvider serviceProvider, IOptionsMonitor<RefreshConfig> config) : base(serviceProvider,config) {}
+        public RefreshEventsService(IServiceProvider serviceProvider, IOptionsMonitor<RefreshConfig> config) : base(serviceProvider, config) { }
 
         /// <summary>
         /// Refreshes the events stored in the database based on the source
@@ -38,7 +46,7 @@ namespace Logbook.Services
             List<Group> groups = context.Groups.ToList();
 
             foreach (Group group in groups)
-            {   
+            {
                 User? sourceUser = context.Users.Where(u => u.Id == group.SourceId).FirstOrDefault();
                 if (sourceUser == null)
                 {
@@ -65,8 +73,10 @@ namespace Logbook.Services
 
             using (var reader = ExcelReaderFactory.CreateReader(stream))
             {
-                var result = reader.AsDataSet();
-                var table = result.Tables[0];
+                DataSet result = reader.AsDataSet();
+                DataTable table = result.Tables[0];
+
+                HeaderData headerData = GetHeaderData(table);
 
                 foreach (DataRow row in table.Rows)
                 {
@@ -77,18 +87,27 @@ namespace Logbook.Services
                         DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(group.StartTime.ToTimeSpan()), TimeZoneInfo.FindSystemTimeZoneById(group.TimeZone));
                         DateTime endTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(group.EndTime.ToTimeSpan()), TimeZoneInfo.FindSystemTimeZoneById(group.TimeZone));
 
-                        string title = row[2].ToString() ?? "No title";
-                        string organizer = row[3].ToString() ?? "";
-                        string notes = row[10].ToString() ?? "";
-       
+                        RowData rowData = GetRowData(row, headerData);
+
+                        List<EventAttendance> eventAttendances = new List<EventAttendance>();
+                        for(int i = 0; i < headerData.NAttendees; i++)
+                        {
+                            eventAttendances.Add(new EventAttendance()
+                            {
+                                Name = headerData.Attendees[i],
+                                Status = AttendanceStatusMap[rowData.AttendanceData[i]]
+                            });
+                        }
+
                         events.Add(new Event()
                         {
                             StartTime = startTime,
                             EndTime = endTime,
-                            Title = title,
+                            Title = rowData.Title,
                             Group = group,
-                            Notes = notes,
-                            Organizer = organizer
+                            Notes = rowData.Notes,
+                            Organizer = rowData.Organizer,
+                            EventAttendances = eventAttendances
                         });
                     }
                     else continue;
@@ -128,6 +147,7 @@ namespace Logbook.Services
                     existingEvent.Title = evnt.Title;
                     existingEvent.Notes = evnt.Notes;
                     existingEvent.Organizer = evnt.Organizer;
+                    existingEvent.EventAttendances = evnt.EventAttendances;
 
 
                     allExistingEvents.Remove(existingEvent);
@@ -145,6 +165,70 @@ namespace Logbook.Services
             }
 
             context.SaveChanges();
+        }
+
+        static HeaderData GetHeaderData(DataTable table)
+        {
+            List<string> attendees = new List<string>();
+
+            int col = 4;
+            bool cont = true;
+            while (cont)
+            {
+                string? attendee = table.Rows[2][col].ToString();
+
+                if (string.IsNullOrEmpty(attendee))
+                {
+                    cont = false;
+                    continue;
+                }
+
+                attendees.Add(attendee);
+                col++;
+            }
+
+            return new HeaderData()
+            {
+                TitleColumn = 2,
+                OrganizerColumn = 3,
+                Attendees = attendees.ToArray(),
+                NAttendees = attendees.Count,
+                NotesColumn = 4 + attendees.Count
+            };
+        }
+
+        static RowData GetRowData(DataRow row, HeaderData headerData)
+        {
+            string[] attendanceData = new string[headerData.NAttendees];
+            for (int attendanceColumn = 0; attendanceColumn < headerData.NAttendees; attendanceColumn++)
+            {
+                attendanceData[attendanceColumn] = row[4 + attendanceColumn].ToString() ?? "";
+            }
+
+            return new RowData()
+            {
+                Title = row[headerData.TitleColumn].ToString() ?? "",
+                Organizer = row[headerData.OrganizerColumn].ToString() ?? "",
+                Notes = row[headerData.NotesColumn].ToString() ?? "",
+                AttendanceData = attendanceData
+            };
+        }
+
+        private class HeaderData
+        {
+            public int TitleColumn { get; set; } = 0;
+            public int OrganizerColumn { get; set; } = 0;
+            public int NotesColumn { get; set; } = 0;
+            public string[] Attendees { get; set; } = [];
+            public int NAttendees { get; set; } = 0;
+        }
+
+        private class RowData
+        {
+            public string Title { get; set; } = "";
+            public string Organizer { get; set; } = "";
+            public string Notes { get; set; } = "";
+            public string[] AttendanceData { get; set; } = [];
         }
     }
 }

@@ -98,7 +98,7 @@ namespace Logbook.Services
             return Task.CompletedTask;
         }
 
-        bool DoesBodyMatch(Graph.Event graphEvent, Models.Event @event, Models.Group group)
+        bool DoesBodyMatch(Graph.Event graphEvent, Event @event, Models.Group group)
         {
             string graphBody = NormalizeHtml(graphEvent.Body.Content);
             // string eventBody = Macros.Fill(group.EventBody, @event);

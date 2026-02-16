@@ -43,6 +43,11 @@ namespace Logbook.Models
         public virtual Group Group { get; set; } = Group.None;
 
         /// <summary>
+        /// A collection of all attendance statusses regarding this event
+        /// </summary>
+        public virtual ICollection<EventAttendance> EventAttendances {get; set;} = new List<EventAttendance>();
+
+        /// <summary>
         /// The id of this event in a users calendar, only set when this object was created from graph
         /// </summary>
         [NotMapped]
@@ -73,6 +78,12 @@ namespace Logbook.Models
             if (!Notes.Equals(@event.Notes)) return false;
             if (!Organizer.Equals(@event.Organizer)) return false;
             if (!Group.Id.Equals(@event.Group.Id)) return false;
+
+            bool sameEventAttendances = EventAttendances.Count == @event.EventAttendances.Count 
+                && !EventAttendances.Except(@event.EventAttendances).Any() 
+                && !@event.EventAttendances.Except(EventAttendances).Any();
+
+            if(!sameEventAttendances) return false;
 
             return true;
         }

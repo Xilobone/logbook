@@ -93,23 +93,20 @@ namespace Logbook.Graph
         /// </summary>
         /// <param name="calendarName">The name of the calendar to add the event to</param>
         /// <param name="event">The event to add to the calendar</param>
-        /// <param name="group">The group the event belongs to</param>
+        /// <param name="eventTemplate">The event template to use to add to the calendar</param>
         /// <returns>A bool indicating whether the action was successful</returns>
-        public async Task<bool> AddEvent(string calendarName, Models.Event @event, Group group)
+        public async Task<bool> AddEvent(string calendarName, Models.Event @event, EventTemplate eventTemplate)
         {
             Event graphEvent = new Event(
                 null,
-                // Macros.Fill(group.EventTitle, @event),
-                Macros.Fill("", @event),
-                // new EventBody("HTML", Macros.Fill(group.EventBody, @event)),
-                new EventBody("HTML", Macros.Fill("", @event)),
+                Macros.Fill(eventTemplate.Title, @event),
+                new EventBody("HTML", Macros.Fill(eventTemplate.Body, @event)),
                 new EventTime(@event.StartTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC"),
                 new EventTime(@event.EndTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC"),
-                Models.EventStatus.Free
+                eventTemplate.ShowAs
                 );
 
             string json = JsonSerializer.Serialize(graphEvent);
-
             string? calendarId = await GetId(calendarName);
             if (string.IsNullOrEmpty(calendarId))
             {

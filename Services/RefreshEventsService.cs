@@ -3,7 +3,6 @@ using ExcelDataReader;
 using Logbook.Data;
 using Logbook.Models;
 using Microsoft.Extensions.Options;
-using Microsoft.Kiota.Abstractions.Extensions;
 
 namespace Logbook.Services
 {
@@ -61,9 +60,10 @@ namespace Logbook.Services
                 using MemoryStream stream = new MemoryStream(fileBytes);
                 List<Event> events = CreateEventsFromStream(stream, group);
 
-                UpdateEventsInDB(events, context);
+                UpdateEventsInDB(events, group, context);
             }
 
+            context.SaveChanges();
             return Task.CompletedTask;
         }
 
@@ -83,14 +83,14 @@ namespace Logbook.Services
 
                     if (row[1] is DateTime dateTime)
                     {
-                        //Start and endtime in utc
-                        DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(group.StartTime.ToTimeSpan()), TimeZoneInfo.FindSystemTimeZoneById(group.TimeZone));
-                        DateTime endTime = TimeZoneInfo.ConvertTimeToUtc(dateTime.Add(group.EndTime.ToTimeSpan()), TimeZoneInfo.FindSystemTimeZoneById(group.TimeZone));
-
                         RowData rowData = GetRowData(row, headerData);
 
+                        //Start and endtime in utc
+                        DateTime startTime = GetUTCTime(rowData.StartTime, rowData.StartDate, group.StartTime, dateTime, group.TimeZone);
+                        DateTime endTime = GetUTCTime(rowData.EndTime, rowData.EndDate, group.EndTime, dateTime, group.TimeZone);
+
                         List<EventAttendance> eventAttendances = new List<EventAttendance>();
-                        for(int i = 0; i < headerData.NAttendees; i++)
+                        for (int i = 0; i < headerData.NAttendees; i++)
                         {
                             eventAttendances.Add(new EventAttendance()
                             {
@@ -117,26 +117,26 @@ namespace Logbook.Services
             return events;
         }
 
-        static void UpdateEventsInDB(List<Event> events, LogbookDBContext context)
+        static void UpdateEventsInDB(List<Event> events, Group group, LogbookDBContext context)
         {
             if (events.Count == 0) return;
 
             Logger.Log($"Going to update {events.Count} events");
             //keep track of all events that are in the db but not in the source list, so these can be deleted
-            List<Event> allExistingEvents = context.Events.Where(e => e.Group.Id.Equals(events.First().Group.Id)).ToList();
+            List<Event> allExistingEvents = group.Events.ToList();
+            // List<Event> allExistingEvents = context.Events.Where(e => e.Group.Id.Equals(events.First().Group.Id)).ToList();
 
             foreach (Event evnt in events)
             {
-                Event? existingEvent = context.Events
-                    .Where(e => e.Group.Id.Equals(evnt.Group.Id))
+                Event? existingEvent = group.Events
                     .Where(e => e.StartTime.Equals(evnt.StartTime))
-                    .Where(e => e.EndTime.Equals(evnt.EndTime))
-                    .FirstOrDefault();
+                    .FirstOrDefault(e => e.EndTime.Equals(evnt.EndTime));
 
                 if (existingEvent == null)
                 {
                     evnt.Id = new Guid();
-                    context.Events.Add(evnt);
+                    group.Events.Add(evnt);
+                    Logger.Log($"added {evnt.Title}");
                 }
                 else if (!existingEvent.Equals(evnt))
                 {
@@ -161,10 +161,19 @@ namespace Logbook.Services
 
             foreach (Event oldEvent in allExistingEvents)
             {
-                context.Events.Remove(oldEvent);
+                group.Events.Remove(oldEvent);
+                Logger.Log($"removed {oldEvent.Title}");
             }
 
-            context.SaveChanges();
+            // context.SaveChanges();
+
+        }
+
+        static DateTime GetUTCTime(TimeOnly? time, DateTime? date, TimeOnly defaultTime, DateTime defaultDate, string timeZone)
+        {
+            DateTime d = date ?? defaultDate;
+            TimeOnly t = time ?? defaultTime;
+            return TimeZoneInfo.ConvertTimeToUtc(d.Add(t.ToTimeSpan()), TimeZoneInfo.FindSystemTimeZoneById(timeZone));
         }
 
         static HeaderData GetHeaderData(DataTable table)
@@ -193,7 +202,11 @@ namespace Logbook.Services
                 OrganizerColumn = 3,
                 Attendees = attendees.ToArray(),
                 NAttendees = attendees.Count,
-                NotesColumn = 4 + attendees.Count
+                NotesColumn = attendees.Count + 4,
+                StartTimeColumn = attendees.Count + 5,
+                StartDateColumn = attendees.Count + 7,
+                EndTimeColumn = attendees.Count + 6,
+                EndDateColumn = attendees.Count + 8,
             };
         }
 
@@ -210,8 +223,45 @@ namespace Logbook.Services
                 Title = row[headerData.TitleColumn].ToString() ?? "",
                 Organizer = row[headerData.OrganizerColumn].ToString() ?? "",
                 Notes = row[headerData.NotesColumn].ToString() ?? "",
-                AttendanceData = attendanceData
+                AttendanceData = attendanceData,
+                StartTime = ParseTime(row[headerData.StartTimeColumn]),
+                StartDate = ParseDate(row[headerData.StartDateColumn].ToString()),
+                EndTime = ParseTime(row[headerData.EndTimeColumn]),
+                EndDate = ParseDate(row[headerData.EndDateColumn].ToString()),
             };
+        }
+
+        static TimeOnly? ParseTime(object? cell)
+        {
+            if (cell == null || cell == DBNull.Value)
+                return null;
+
+            // ExcelDataReader often gives DateTime for time cells
+            if (cell is DateTime dt)
+                return TimeOnly.FromDateTime(dt);
+
+            // Sometimes Excel gives a double for time-only cells
+            if (cell is double d)
+            {
+                // Excel stores time as fraction of a day
+                var dt2 = DateTime.FromOADate(d);
+                return TimeOnly.FromDateTime(dt2);
+            }
+
+            // Fallback: parse as text
+            if (TimeOnly.TryParse(cell.ToString(), out var time))
+                return time;
+
+            return null;
+        }
+
+
+        static DateTime? ParseDate(string? text)
+        {
+            if (text == null) return null;
+
+            if (DateTime.TryParse(text, out DateTime date)) return date;
+            return null;
         }
 
         private class HeaderData
@@ -219,6 +269,10 @@ namespace Logbook.Services
             public int TitleColumn { get; set; } = 0;
             public int OrganizerColumn { get; set; } = 0;
             public int NotesColumn { get; set; } = 0;
+            public int StartTimeColumn { get; set; } = 0;
+            public int StartDateColumn { get; set; } = 0;
+            public int EndTimeColumn { get; set; } = 0;
+            public int EndDateColumn { get; set; } = 0;
             public string[] Attendees { get; set; } = [];
             public int NAttendees { get; set; } = 0;
         }
@@ -229,6 +283,12 @@ namespace Logbook.Services
             public string Organizer { get; set; } = "";
             public string Notes { get; set; } = "";
             public string[] AttendanceData { get; set; } = [];
+
+            public TimeOnly? StartTime { get; set; } = null;
+            public DateTime? StartDate { get; set; } = null;
+            public TimeOnly? EndTime { get; set; } = null;
+            public DateTime? EndDate { get; set; } = null;
+
         }
     }
 }

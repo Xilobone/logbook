@@ -67,21 +67,19 @@ namespace Logbook.Services
                     foreach (Event @event in groupEvents)
                     {
                         Graph.Event? existingEvent = calendarEvents
-                            // .Where(e => e.Subject.Equals(Macros.Fill(group.EventTitle, @event)))
-                            .Where(e => e.Subject.Equals(Macros.Fill("", @event)))
-                            .Where(e => DoesBodyMatch(e, @event, group))
-                            .Where(e => DoesTimeMatch(e.Start,@event.StartTime))
-                            .FirstOrDefault(e => DoesTimeMatch(e.End,@event.EndTime));
+                            .Where(e => DoesTitleMatch(e, @event, group, user))
+                            .Where(e => DoesBodyMatch(e, @event, group, user))
+                            .Where(e => DoesAttendanceMatch(e, @event, group, user))
+                            .Where(e => DoesTimeMatch(e.Start, @event.StartTime))
+                            .FirstOrDefault(e => DoesTimeMatch(e.End, @event.EndTime));
 
                         if (existingEvent == null)
                         {
                             Logger.Log($"Adding event {@event.Title} to user {user.Id} calendar");
-                            await graphClient.Calendars.AddEvent(user.CalendarName, @event, group);
+                            await graphClient.Calendars.AddEvent(user.CalendarName, @event, group.GetAppliedEventTemplate(user, @event));
                         }
                         else
                         {
-
-
                             unmatchedEvents.Remove(existingEvent);
                             //update existing event
                             //for now the only fields in the event are the key fields, so events will always be identical or not be matched
@@ -98,13 +96,28 @@ namespace Logbook.Services
             return Task.CompletedTask;
         }
 
-        bool DoesBodyMatch(Graph.Event graphEvent, Event @event, Models.Group group)
+        bool DoesTitleMatch(Graph.Event graphEvent, Event @event, Models.Group group, User user)
+        {
+            string graphTitle = graphEvent.Subject;
+
+            EventTemplate eventTemplate = group.GetAppliedEventTemplate(user, @event);
+            string eventTitle = Macros.Fill(eventTemplate.Title, @event);
+
+            return graphTitle.Equals(eventTitle);
+        }
+        bool DoesBodyMatch(Graph.Event graphEvent, Event @event, Models.Group group, User user)
         {
             string graphBody = NormalizeHtml(graphEvent.Body.Content);
-            // string eventBody = Macros.Fill(group.EventBody, @event);
-            string eventBody = Macros.Fill("", @event);
+
+            EventTemplate eventTemplate = group.GetAppliedEventTemplate(user, @event);
+            string eventBody = Macros.Fill(eventTemplate.Body, @event);
 
             return graphBody.Equals(eventBody);
+        }
+
+        bool DoesAttendanceMatch(Graph.Event graphEvent, Event @event, Models.Group group, User user)
+        {
+            return graphEvent.ShowAs == group.GetAppliedEventTemplate(user,@event).ShowAs;
         }
 
         bool DoesTimeMatch(Graph.EventTime graphTime, DateTime eventTime)

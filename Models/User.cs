@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Logbook.Models
 {
     /// <summary>
@@ -78,5 +80,25 @@ namespace Logbook.Models
         /// The refreshToken assosiated with this user
         /// </summary>
         public string RefreshToken { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Checks if a given string matches the users alias, respects the set matching type
+        /// </summary>
+        /// <param name="text">The text to check agains the users alias</param>
+        /// <returns>True if the text matches, false otherwise</returns>
+        public bool IsAnAliasMatch(string text)
+        {
+            switch(AliasMatchingType)
+            {
+                case AliasMatching.Loose:
+                    return Alias.Contains(text);
+                case AliasMatching.Strict:
+                    return Alias.Equals(text);
+                case AliasMatching.Regex:
+                    return Regex.Match(text,Alias).Success;
+                default:
+                    return false;
+            }
+        }
     }
 }

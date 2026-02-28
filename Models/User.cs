@@ -82,6 +82,16 @@ namespace Logbook.Models
         public string RefreshToken { get; set; } = string.Empty;
 
         /// <summary>
+        /// Collection of all personal event templates of the user
+        /// </summary>
+        public virtual ICollection<PersonalEventTemplateSet> PersonalEventTemplates {get; set;} = new List<PersonalEventTemplateSet>();
+
+        /// <summary>
+        /// Represents a default empty user
+        /// </summary>
+        public static User None {get;} = new();
+        
+        /// <summary>
         /// Checks if a given string matches the users alias, respects the set matching type
         /// </summary>
         /// <param name="text">The text to check agains the users alias</param>

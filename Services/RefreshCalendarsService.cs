@@ -38,8 +38,19 @@ namespace Logbook.Services
             List<User> users = context.Users.ToList();
             foreach (User user in users)
             {
+                if (!user.Enabled)
+                {
+                    Logger.Log($"{user.Id} is not enabled skipping", Logger.LogLevel.Debug);
+                    continue;
+                }
+
+                if (string.IsNullOrEmpty(user.CalendarName))
+                {
+                    Logger.Log($"{user.Id} calendar name is empty, skipping", Logger.LogLevel.Debug);
+                    continue;
+                }
+
                 Logger.Log($"Going to update events of user {user.Id}");
-                if (!user.Enabled) continue;
 
                 Graph.GraphClient graphClient = clientProvider.Create(user, context);
 
@@ -76,7 +87,7 @@ namespace Logbook.Services
                         if (existingEvent == null)
                         {
                             Logger.Log($"Adding event {@event.Title} to user {user.Id} calendar");
-                            await graphClient.Calendars.AddEvent(user.CalendarName, @event, group.GetAppliedEventTemplate(user, @event));
+                            await graphClient.Calendars.AddEvent(user.CalendarName, @event, GetAppliedEventTemplate(user, group, @event));
                         }
                         else
                         {
@@ -100,7 +111,7 @@ namespace Logbook.Services
         {
             string graphTitle = graphEvent.Subject;
 
-            EventTemplate eventTemplate = group.GetAppliedEventTemplate(user, @event);
+            EventTemplate eventTemplate = GetAppliedEventTemplate(user, group, @event);
             string eventTitle = Macros.Fill(eventTemplate.Title, @event);
 
             return graphTitle.Equals(eventTitle);
@@ -109,7 +120,8 @@ namespace Logbook.Services
         {
             string graphBody = NormalizeHtml(graphEvent.Body.Content);
 
-            EventTemplate eventTemplate = group.GetAppliedEventTemplate(user, @event);
+            EventTemplate eventTemplate = GetAppliedEventTemplate(user, group, @event);
+
             string eventBody = Macros.Fill(eventTemplate.Body, @event);
 
             return graphBody.Equals(eventBody);
@@ -117,13 +129,13 @@ namespace Logbook.Services
 
         bool DoesAttendanceMatch(Graph.Event graphEvent, Event @event, Models.Group group, User user)
         {
-            return graphEvent.ShowAs == group.GetAppliedEventTemplate(user,@event).ShowAs;
+            return graphEvent.ShowAs == GetAppliedEventTemplate(user, group, @event).ShowAs;
         }
 
         bool DoesTimeMatch(Graph.EventTime graphTime, DateTime eventTime)
         {
             DateTime graphDateTime = DateTime.Parse(graphTime.DateTime, CultureInfo.InvariantCulture);
-            return (graphDateTime.Equals(eventTime));
+            return graphDateTime.Equals(eventTime);
         }
 
         static string NormalizeHtml(string html)
@@ -150,6 +162,44 @@ namespace Logbook.Services
             content = Regex.Replace(content, @"\s+", " ");    // inside text
 
             return content.Trim();
+        }
+
+        EventTemplate GetAppliedEventTemplate(User user, Models.Group group, Event @event)
+        {
+            EventTemplateSet eventTemplateSet;
+
+            //Determine whether the personal or group set has to be used
+            PersonalEventTemplateSet? personalEventTemplateSet = user.PersonalEventTemplates.FirstOrDefault(p => p.Group.Id.Equals(group.Id));
+            if (personalEventTemplateSet != null && personalEventTemplateSet.Enabled)
+            {
+                eventTemplateSet = personalEventTemplateSet.EventTemplateSet;
+            }
+            else
+            {
+                eventTemplateSet = group.EventTemplateSet;
+            }
+
+            if (!eventTemplateSet.DifferentiateOnAttendance) return eventTemplateSet.Attending;
+
+            foreach (EventAttendance eventAttendance in @event.EventAttendances)
+            {
+                if (!user.IsAnAliasMatch(eventAttendance.Name)) continue;
+
+                switch (eventAttendance.Status)
+                {
+                    case EventAttendance.AttendanceStatus.Attending:
+                        return eventTemplateSet.Attending;
+                    case EventAttendance.AttendanceStatus.Tentative:
+                        return eventTemplateSet.Tentative;
+                    case EventAttendance.AttendanceStatus.Unavailable:
+                        return eventTemplateSet.Unavailable;
+                    default:
+                        return eventTemplateSet.Attending;
+                }
+            }
+
+            //only gets reached if no sigle alias match was found, default to attending
+            return eventTemplateSet.Attending;
         }
     }
 }

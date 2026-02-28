@@ -49,5 +49,29 @@ namespace Logbook.Data
                     new EncryptedConverter()
                 );
         }
+
+        /// <summary>
+        /// Override of the default saveChanges function, also updates the timestamp fields
+        /// of the saved objects, if applicable
+        /// </summary>
+        /// <returns>The number of state entries written to the database</returns>
+        public override int SaveChanges()
+        {
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.Entity is IHasTimestamps &&
+                            (e.State == EntityState.Added || e.State == EntityState.Modified));
+
+            foreach (var entry in entries)
+            {
+                var entity = (IHasTimestamps)entry.Entity;
+                if (entry.State == EntityState.Added)
+                    entity.CreatedAt = DateTime.UtcNow;
+
+                entity.LastUpdated = DateTime.UtcNow;
+            }
+
+            return base.SaveChanges();
+        }
+
     }
 }

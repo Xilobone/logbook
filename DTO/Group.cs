@@ -47,6 +47,16 @@ namespace Logbook.DTO.Group
         /// The event template set of this group
         /// </summary>
         public EventTemplateSet EventTemplateSet {get;set;} = EventTemplateSet.None;
+
+        /// <summary>
+        /// The time at which the group was created
+        /// </summary>
+        public DateTime CreatedAt {get; set;} = DateTime.UnixEpoch;
+
+        /// <summary>
+        /// The time at which the group was last updated
+        /// </summary>
+        public DateTime LastUpdated {get; set;} = DateTime.UnixEpoch;
     }
 
 

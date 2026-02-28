@@ -1,6 +1,6 @@
 using Logbook.Data;
-using Logbook.Graph;
 using Logbook.Models;
+using Logbook.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,15 +15,13 @@ namespace Logbook.Controllers
     public class MeController : ControllerBase
     {
         readonly LogbookDBContext _context;
-        readonly GraphClientProvider _graphClientProvider;
 
         /// <summary>
         /// Create a new controller for the Me endpoint
         /// </summary>
-        public MeController(LogbookDBContext context, GraphClientProvider graphClientProvider)
+        public MeController(LogbookDBContext context)
         {
             _context = context;
-            _graphClientProvider = graphClientProvider;
         }
         /// <summary>
         /// Retuns info about the user, the only endpoint that unregistered users are allowed to called
@@ -34,7 +32,7 @@ namespace Logbook.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMe()
         {
-            (bool isValidRequest, User user, IActionResult error) = await Util.Auth.ValidateRequest(this, _context);
+            (bool isValidRequest, Models.User user, IActionResult error) = await Util.Auth.ValidateRequest(this, _context);
             //we allow the error to be forbid in this specific case, unregistered users are allowed
             if (!isValidRequest && error is UnauthorizedResult) return error;
 
@@ -59,6 +57,7 @@ namespace Logbook.Controllers
                 user.CanBeSource,
                 user.Alias,
                 user.AliasMatchingType,
+                Registered = true,
             });
         }
 
@@ -70,14 +69,14 @@ namespace Logbook.Controllers
         [HttpPost()]
         public async Task<IActionResult> SetPersonalConfig([FromBody] DTO.Me config)
         {
-            (bool isValidRequest, User user, IActionResult error) = await Util.Auth.ValidateRequest(this, _context);
+            (bool isValidRequest, Models.User user, IActionResult error) = await Auth.ValidateRequest(this, _context);
             if (!isValidRequest) return error;
 
             if (config.Enabled != null) user.Enabled = (bool)config.Enabled;
             if (!string.IsNullOrEmpty(config.DisplayName)) user.DisplayName = config.DisplayName!;
             if (!string.IsNullOrEmpty(config.CalendarName)) user.CalendarName = config.CalendarName!;
             if (!string.IsNullOrEmpty(config.Alias)) user.Alias = config.Alias!;
-            if (config.AliasMatchingType != null) user.AliasMatchingType = (User.AliasMatching) config.AliasMatchingType;
+            if (config.AliasMatchingType != null) user.AliasMatchingType = (Models.User.AliasMatching)config.AliasMatchingType;
 
             _context.SaveChanges();
             return Ok(new

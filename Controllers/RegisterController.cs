@@ -137,7 +137,7 @@ namespace Logbook.Controllers
 
             user.AccessToken = graphAccessToken!;
             user.RefreshToken = graphRefreshToken!;
-            user.Enabled = true;
+            user.Enabled = false;
             user.CanBeSource = authState.sourceRequest;
 
             _context.SaveChanges();

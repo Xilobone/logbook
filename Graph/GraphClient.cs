@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -170,19 +171,26 @@ namespace Logbook.Graph
         {
             Logger.Log("Token was expired, obtaining a new token from Graph");
             string url = $"https://login.microsoftonline.com/{_config["AzureAD:TenantID"]}/oauth2/v2.0/token";
-            HttpRequestMessage refreshRequest = new HttpRequestMessage(HttpMethod.Post,url);
-
-            refreshRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            HttpRequestMessage refreshRequest = new HttpRequestMessage(HttpMethod.Post, url)
             {
-                ["client_id"] = _config["AzureAD:ClientId"]!,
-                ["client_secret"] = _config["AzureAD:ClientSecret"]!,
-                ["grant_type"] = "refresh_token",
-                ["refresh_token"] = _user.RefreshToken,
-                ["scope"] = "https://graph.microsoft.com/.default"
-            });
+                Content = new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["client_id"] = _config["AzureAD:ClientId"]!,
+                    ["client_secret"] = _config["AzureAD:ClientSecret"]!,
+                    ["grant_type"] = "refresh_token",
+                    ["refresh_token"] = _user.RefreshToken,
+                    ["scope"] = "https://graph.microsoft.com/.default"
+                })
+            };
 
             HttpResponseMessage refreshResponse = await _httpClient.SendAsync(refreshRequest);
             string refreshData = await refreshResponse.Content.ReadAsStringAsync();
+
+
+            if (refreshResponse.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                Logger.Log(refreshData, Logger.LogLevel.Warning);
+            }
 
             TokenResponse token = JsonSerializer.Deserialize<TokenResponse>(refreshData)!;
 

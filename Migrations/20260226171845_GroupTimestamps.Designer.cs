@@ -3,6 +3,7 @@ using System;
 using Logbook.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace logbook.Migrations
 {
     [DbContext(typeof(LogbookDBContext))]
-    partial class LogbookDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260226171845_GroupTimestamps")]
+    partial class GroupTimestamps
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -187,35 +190,6 @@ namespace logbook.Migrations
                     b.ToTable("Groups");
                 });
 
-            modelBuilder.Entity("Logbook.Models.PersonalEventTemplateSet", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("EventTemplateSetId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("GroupId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EventTemplateSetId");
-
-                    b.HasIndex("GroupId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PersonalEventTemplateSet");
-                });
-
             modelBuilder.Entity("Logbook.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -331,33 +305,6 @@ namespace logbook.Migrations
                     b.Navigation("EventTemplateSet");
                 });
 
-            modelBuilder.Entity("Logbook.Models.PersonalEventTemplateSet", b =>
-                {
-                    b.HasOne("Logbook.Models.EventTemplateSet", "EventTemplateSet")
-                        .WithMany()
-                        .HasForeignKey("EventTemplateSetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Logbook.Models.Group", "Group")
-                        .WithMany()
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Logbook.Models.User", "User")
-                        .WithMany("PersonalEventTemplates")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EventTemplateSet");
-
-                    b.Navigation("Group");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Logbook.Models.Event", b =>
                 {
                     b.Navigation("EventAttendances");
@@ -366,11 +313,6 @@ namespace logbook.Migrations
             modelBuilder.Entity("Logbook.Models.Group", b =>
                 {
                     b.Navigation("Events");
-                });
-
-            modelBuilder.Entity("Logbook.Models.User", b =>
-                {
-                    b.Navigation("PersonalEventTemplates");
                 });
 #pragma warning restore 612, 618
         }

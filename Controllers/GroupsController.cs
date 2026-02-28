@@ -131,21 +131,21 @@ namespace Logbook.Controllers
                 {
                     group.EventTemplateSet.Attending.ShowAs = Enum.Parse<EventStatus>(updateParam.EventTemplateSet.Attending.ShowAs);
                     group.EventTemplateSet.Attending.Title = updateParam.EventTemplateSet.Attending.Title;
-                    group.EventTemplateSet.Attending.Body = updateParam.EventTemplateSet.Attending.Body;
+                    group.EventTemplateSet.Attending.Body = EventTemplateSet.StripInvalidCharacters(updateParam.EventTemplateSet.Attending.Body);
                 }
 
                 if (updateParam.EventTemplateSet.Tentative != null)
                 {
                     group.EventTemplateSet.Tentative.ShowAs = Enum.Parse<EventStatus>(updateParam.EventTemplateSet.Tentative.ShowAs);
                     group.EventTemplateSet.Tentative.Title = updateParam.EventTemplateSet.Tentative.Title;
-                    group.EventTemplateSet.Tentative.Body = updateParam.EventTemplateSet.Tentative.Body;
+                    group.EventTemplateSet.Tentative.Body = EventTemplateSet.StripInvalidCharacters(updateParam.EventTemplateSet.Tentative.Body);
                 }
 
                 if (updateParam.EventTemplateSet.Unavailable != null)
                 {
                     group.EventTemplateSet.Unavailable.ShowAs = Enum.Parse<EventStatus>(updateParam.EventTemplateSet.Unavailable.ShowAs);
                     group.EventTemplateSet.Unavailable.Title = updateParam.EventTemplateSet.Unavailable.Title;
-                    group.EventTemplateSet.Unavailable.Body = updateParam.EventTemplateSet.Unavailable.Body;
+                    group.EventTemplateSet.Unavailable.Body = EventTemplateSet.StripInvalidCharacters(updateParam.EventTemplateSet.Unavailable.Body);
                 }
             }
             if (!string.IsNullOrEmpty(updateParam.SourceId))

@@ -3,7 +3,7 @@ namespace Logbook.Models
     /// <summary>
     /// Resembles a group of which users can be part, groups can influence the content visible for the users
     /// </summary>
-    public class Group
+    public class Group : IHasTimestamps
     {
         /// <summary>
         /// The unique identifier of this group
@@ -55,40 +55,14 @@ namespace Logbook.Models
         /// </summary>
         public virtual EventTemplateSet EventTemplateSet { get; set; } = EventTemplateSet.None;
 
+        ///<inheritdoc/>
+        public DateTime CreatedAt { get; set; } = DateTime.UnixEpoch;
+        /// <interitdoc/>
+        public DateTime LastUpdated { get; set; } = DateTime.UnixEpoch;
+
         /// <summary>
         /// Empty Group to indicate no group is present
         /// </summary>
         public static readonly Group None = new();
-
-        /// <summary>
-        /// Gets the applied template for the specified user and group
-        /// </summary>
-        /// <param name="user">The user to get the template of, matches based on its alias</param>
-        /// <param name="event">The event to get the template of</param>
-        /// <returns>The applied event template</returns>
-        public EventTemplate GetAppliedEventTemplate(User user, Event @event)
-        {
-            if (!EventTemplateSet.DifferentiateOnAttendance) return EventTemplateSet.Attending;
-
-            foreach (EventAttendance eventAttendance in @event.EventAttendances)
-            {
-                if (!user.IsAnAliasMatch(eventAttendance.Name)) continue;
-
-                switch (eventAttendance.Status)
-                {
-                    case EventAttendance.AttendanceStatus.Attending:
-                        return EventTemplateSet.Attending;
-                    case EventAttendance.AttendanceStatus.Tentative:
-                        return EventTemplateSet.Tentative;
-                    case EventAttendance.AttendanceStatus.Unavailable:
-                        return EventTemplateSet.Unavailable;
-                    default:
-                        return EventTemplateSet.Attending;
-                }
-            }
-
-            //only gets reached if no sigle alias match was found, default to attending
-            return EventTemplateSet.Attending;
-        }
     }
 }

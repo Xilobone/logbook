@@ -17,12 +17,12 @@ namespace Logbook.Models
         /// <summary>
         /// The title of the events of this group, supports macros
         /// </summary>
-        public string Title { get; set; } = string.Empty;
+        public string Title { get; set; } = "${EVENT.TITLE}";
 
         /// <summary>
         /// The body of the events of this group, supports macros
         /// </summary>
-        public string Body { get; set; } = string.Empty;
+        public string Body { get; set; } = "${EVENT.NOTES}";
 
         /// <summary>
         /// The default empty template

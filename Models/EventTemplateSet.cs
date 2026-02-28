@@ -36,5 +36,14 @@ namespace Logbook.Models
         /// </summary>
         public static readonly EventTemplateSet None = new();
 
+        /// <summary>
+        /// Strips invalid characters that may be included in the text, replaces them with html tags if possible
+        /// </summary>
+        /// <param name="text">The text to strip the invalid characters of</param>
+        /// <returns>The stripped text</returns>
+        public static string StripInvalidCharacters(string text)
+        {
+            return text.Replace("\n", "<br/>");
+        }
     }
 }

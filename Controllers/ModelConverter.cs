@@ -13,8 +13,6 @@ namespace Logbook.Util
         /// </summary>
         public class ToDTO
         {
-
-
             /// <summary>
             /// Converts an actual group to a DTO group
             /// </summary>
@@ -31,13 +29,20 @@ namespace Logbook.Util
                     StartTime = group.StartTime,
                     EndTime = group.EndTime,
                     TimeZone = group.TimeZone,
-                    EventTemplateSet = EventTemplateSet(group.EventTemplateSet)
+                    EventTemplateSet = EventTemplateSet(group.EventTemplateSet),
+                    CreatedAt = group.CreatedAt,
+                    LastUpdated = group.LastUpdated
                 };
 
                 return dtoGroup;
             }
 
-            static DTO.EventTemplateSet EventTemplateSet(EventTemplateSet eventTemplateSet)
+            /// <summary>
+            /// Converts an actual event template set to a DTO event template set
+            /// </summary>
+            /// <param name="eventTemplateSet">The template set to convert</param>
+            /// <returns>The converted template set</returns>
+            public static DTO.EventTemplateSet EventTemplateSet(EventTemplateSet eventTemplateSet)
             {
                 DTO.EventTemplateSet dtoEventTemplateSet = new DTO.EventTemplateSet()
                 {
@@ -49,6 +54,22 @@ namespace Logbook.Util
                 };
 
                 return dtoEventTemplateSet;
+            }
+
+            /// <summary>
+            /// Converts an actual personal event template set to a dto event template set
+            /// </summary>
+            /// <param name="personalEventTemplateSet">The personal event template set to convert</param>
+            /// <returns>The converted set</returns>
+            public static DTO.PersonalEventTemplateSet PersonalEventTemplateSet(PersonalEventTemplateSet personalEventTemplateSet)
+            {
+                DTO.PersonalEventTemplateSet dtoPersonalEventTemplateSet = new DTO.PersonalEventTemplateSet()
+                {
+                    Enabled = personalEventTemplateSet.Enabled,
+                    EventTemplateSet = EventTemplateSet(personalEventTemplateSet.EventTemplateSet),  
+                };
+
+                return dtoPersonalEventTemplateSet;
             }
 
             static DTO.EventTemplate EventTemplate(EventTemplate eventTemplate)
@@ -90,6 +111,21 @@ namespace Logbook.Util
                 return group;
             }
 
+            /// <summary>
+            /// Converts a DTO personal event template set to an actual event template set
+            /// </summary>
+            /// <param name="dtoPersonalEventTemplateSet">The dto personal event template set to convert</param>
+            /// <returns>The converted Personal event template set</returns>
+            public static PersonalEventTemplateSet PersonalEventTemplateSet(DTO.PersonalEventTemplateSet dtoPersonalEventTemplateSet)
+            {
+                PersonalEventTemplateSet personalSet = new PersonalEventTemplateSet
+                {
+                    Enabled = dtoPersonalEventTemplateSet.Enabled,
+                    EventTemplateSet = EventTemplateSet(dtoPersonalEventTemplateSet.EventTemplateSet)
+                };
+
+                return personalSet;
+            }
             static EventTemplateSet EventTemplateSet(DTO.EventTemplateSet dtoEventTemplateSet)
             {
                 EventTemplateSet eventTemplateSet = new EventTemplateSet

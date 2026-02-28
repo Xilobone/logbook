@@ -1,0 +1,19 @@
+{
+    "macros": [
+        {
+            "name": "Event Title",
+            "macro": "${EVENT.TITLE}",
+            "description": "Becomes the event of the title"
+        },
+        {
+            "name": "Event Notes",
+            "macro": "${EVENT.Notes}",
+            "description": "Becomes the content of the notes field"
+        },
+                {
+            "name": "Event Organizer",
+            "macro": "${EVENT.ORGANIZER}",
+            "description": "Becomes the organizer of the event"
+        }
+    ]
+}

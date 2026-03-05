@@ -21,13 +21,20 @@ $exludedFiles =
     "publish",
     "runtimes",
     "appsettings.Development.json",
+    "appsettings.Staging.json",
     "logbook.exe"
 
 $keyfile = "C:\Users\milan\ssh_keys\deploy_private_key"
 
+
+
 dotnet publish >> $logfile
 New-Item -Path . -Name "deploy" -ItemType "Directory" >> $logfile
 Copy-Item "bin/Release/net9.0/*" -Destination deploy
+
+$env:ASPNETCORE_ENVIRONMENT="Staging"
+dotnet ef migrations script -o deploy/migration.sql -i
+$env:ASPNETCORE_ENVIRONMENT="Development"
 
 foreach ($file in $exludedFiles)
 {

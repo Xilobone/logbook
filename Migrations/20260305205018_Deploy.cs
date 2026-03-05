@@ -5,7 +5,7 @@
 namespace logbook.Migrations
 {
     /// <inheritdoc />
-    public partial class GroupEvents : Migration
+    public partial class Deploy : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

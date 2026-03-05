@@ -85,6 +85,7 @@ namespace Logbook.Services
                     {
                         RowData rowData = GetRowData(row, headerData);
 
+                        if (!rowData.Active) continue;
                         //Start and endtime in utc
                         DateTime startTime = GetUTCTime(rowData.StartTime, rowData.StartDate, group.StartTime, dateTime, group.TimeZone);
                         DateTime endTime = GetUTCTime(rowData.EndTime, rowData.EndDate, group.EndTime, dateTime, group.TimeZone);
@@ -124,7 +125,6 @@ namespace Logbook.Services
             Logger.Log($"Going to update {events.Count} events");
             //keep track of all events that are in the db but not in the source list, so these can be deleted
             List<Event> allExistingEvents = group.Events.ToList();
-            // List<Event> allExistingEvents = context.Events.Where(e => e.Group.Id.Equals(events.First().Group.Id)).ToList();
 
             foreach (Event evnt in events)
             {
@@ -198,6 +198,7 @@ namespace Logbook.Services
 
             return new HeaderData()
             {
+                ActiveColumn = 0,
                 TitleColumn = 2,
                 OrganizerColumn = 3,
                 Attendees = attendees.ToArray(),
@@ -220,6 +221,7 @@ namespace Logbook.Services
 
             return new RowData()
             {
+                Active = (row[headerData.ActiveColumn].ToString() ?? "False").Equals("True"),
                 Title = row[headerData.TitleColumn].ToString() ?? "",
                 Organizer = row[headerData.OrganizerColumn].ToString() ?? "",
                 Notes = row[headerData.NotesColumn].ToString() ?? "",
@@ -266,6 +268,7 @@ namespace Logbook.Services
 
         private class HeaderData
         {
+            public int ActiveColumn { get; set; } = 0;
             public int TitleColumn { get; set; } = 0;
             public int OrganizerColumn { get; set; } = 0;
             public int NotesColumn { get; set; } = 0;
@@ -279,6 +282,7 @@ namespace Logbook.Services
 
         private class RowData
         {
+            public bool Active {get; set; } = false;
             public string Title { get; set; } = "";
             public string Organizer { get; set; } = "";
             public string Notes { get; set; } = "";

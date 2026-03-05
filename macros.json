@@ -10,10 +10,75 @@
             "macro": "${EVENT.Notes}",
             "description": "Becomes the content of the notes field"
         },
-                {
+        {
             "name": "Event Organizer",
             "macro": "${EVENT.ORGANIZER}",
             "description": "Becomes the organizer of the event"
+        },
+        {
+            "name": "Event start date",
+            "macro": "${EVENT.DATE.START}",
+            "description": "The start date of the event, displayed in the groups timezone"
+        },
+        {
+            "name": "Event start date in UTC",
+            "macro": "${EVENT.DATE.START.UTC}",
+            "description": "The start date of the event in UTC timezone"
+        },
+        {
+            "name": "Event end date",
+            "macro": "${EVENT.DATE.END}",
+            "description": "The end date of the event, displayed in the groups timezone"
+        },
+        {
+            "name": "Event end date in UTC",
+            "macro": "${EVENT.DATE.END.UTC}",
+            "description": "The end date of the event in UTC timezone"
+        },
+        {
+            "name": "Event start date and time",
+            "macro": "${EVENT.DATETIME.START}",
+            "description": "The start date and time of the event, displayed in the groups timezone"
+        },
+        {
+            "name": "Event start date and time in UTC",
+            "macro": "${EVENT.DATETIME.START.UTC}",
+            "description": "The start date and time of the event in UTC timezone"
+        },
+        {
+            "name": "Event end date and time",
+            "macro": "${EVENT.DATETIME.END}",
+            "description": "The end date and time of the event, displayed in the groups timezone"
+        },
+        {
+            "name": "Event end date and time in UTC",
+            "macro": "${EVENT.DATETIME.END.UTC}",
+            "description": "The end date and time of the event in UTC timezone"
+        },
+                {
+            "name": "Event start time",
+            "macro": "${EVENT.TIME.START}",
+            "description": "The start time of the event, displayed in the groups timezone"
+        },
+        {
+            "name": "Event start time in UTC",
+            "macro": "${EVENT.TIME.START.UTC}",
+            "description": "The start time of the event in UTC timezone"
+        },
+        {
+            "name": "Event end time",
+            "macro": "${EVENT.TIME.END}",
+            "description": "The end time of the event, displayed in the groups timezone"
+        },
+        {
+            "name": "Event end time in UTC",
+            "macro": "${EVENT.TIME.END.UTC}",
+            "description": "The end time of the event in UTC timezone"
+        },
+        {
+            "name": "Group name",
+            "macro": "${GROUP.NAME}",
+            "description": "Becomes the name of the group"
         }
     ]
 }

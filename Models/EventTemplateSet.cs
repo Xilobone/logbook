@@ -43,7 +43,7 @@ namespace Logbook.Models
         /// <returns>The stripped text</returns>
         public static string StripInvalidCharacters(string text)
         {
-            return text.Replace("\n", "<br/>");
+            return text.Replace("\n", "");
         }
     }
 }

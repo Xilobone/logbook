@@ -94,13 +94,14 @@ namespace Logbook.Graph
         /// <param name="calendarName">The name of the calendar to add the event to</param>
         /// <param name="event">The event to add to the calendar</param>
         /// <param name="eventTemplate">The event template to use to add to the calendar</param>
+        /// <param name="group">The group this event belongs to</param>
         /// <returns>A bool indicating whether the action was successful</returns>
-        public async Task<bool> AddEvent(string calendarName, Models.Event @event, EventTemplate eventTemplate)
+        public async Task<bool> AddEvent(string calendarName, Models.Event @event, EventTemplate eventTemplate, Group group)
         {
             Event graphEvent = new Event(
                 null,
-                Macros.Fill(eventTemplate.Title, @event),
-                new EventBody("HTML", Macros.Fill(eventTemplate.Body, @event)),
+                Macros.Fill(eventTemplate.Title, @event, group),
+                new EventBody("HTML", Macros.Fill(eventTemplate.Body, @event, group)),
                 new EventTime(@event.StartTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC"),
                 new EventTime(@event.EndTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"), "UTC"),
                 eventTemplate.ShowAs
@@ -115,34 +116,6 @@ namespace Logbook.Graph
             }
 
             string response = await _graphClient.MakeGraphRequestPost($"me/calendars/{calendarId}/events", json);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Updates an existing event in the users calendar
-        /// </summary>
-        /// <param name="calendarName">The name of the calendar to update the event of</param>
-        /// <param name="event">The event to add to the calendar</param>
-        /// <param name="group">The group the event belongs to</param>
-        /// <param name="id">The id of the event to update</param>
-        /// <returns></returns>
-        public async Task<bool> UpdateEvent(string calendarName, Models.Event @event, Group group, string id)
-        {
-            Event graphEvent = new Event(
-                null,
-                @event.Title,
-                new EventBody("HTML", "<p>this is some text</p>"),
-                new EventTime(@event.StartTime.ToString(), group.TimeZone),
-                new EventTime(@event.EndTime.ToString(), group.TimeZone)
-                );
-
-            string json = JsonSerializer.Serialize(graphEvent);
-            Logger.Log(graphEvent);
-            string? calendarId = await GetId(calendarName);
-            if (string.IsNullOrEmpty(calendarId)) return false;
-
-            string response = await _graphClient.MakeGraphRequestPost($"me/calendars/{calendarId}/events/{id}", json);
 
             return true;
         }

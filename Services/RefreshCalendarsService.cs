@@ -87,7 +87,7 @@ namespace Logbook.Services
                         if (existingEvent == null)
                         {
                             Logger.Log($"Adding event {@event.Title} to user {user.Id} calendar");
-                            await graphClient.Calendars.AddEvent(user.CalendarName, @event, GetAppliedEventTemplate(user, group, @event));
+                            await graphClient.Calendars.AddEvent(user.CalendarName, @event, GetAppliedEventTemplate(user, group, @event), group);
                         }
                         else
                         {
@@ -112,7 +112,7 @@ namespace Logbook.Services
             string graphTitle = graphEvent.Subject;
 
             EventTemplate eventTemplate = GetAppliedEventTemplate(user, group, @event);
-            string eventTitle = Macros.Fill(eventTemplate.Title, @event);
+            string eventTitle = Macros.Fill(eventTemplate.Title, @event, group);
 
             return graphTitle.Equals(eventTitle);
         }
@@ -122,7 +122,7 @@ namespace Logbook.Services
 
             EventTemplate eventTemplate = GetAppliedEventTemplate(user, group, @event);
 
-            string eventBody = Macros.Fill(eventTemplate.Body, @event);
+            string eventBody = Macros.Fill(eventTemplate.Body, @event, group);
 
             return graphBody.Equals(eventBody);
         }
@@ -143,8 +143,8 @@ namespace Logbook.Services
             if (string.IsNullOrWhiteSpace(html))
                 return string.Empty;
 
-            // Extract body content if it exists
-            var bodyMatch = Regex.Match(
+            //Get the body
+            Match bodyMatch = Regex.Match(
                 html,
                 @"<body[^>]*>(.*?)</body>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
@@ -153,17 +153,16 @@ namespace Logbook.Services
                 ? bodyMatch.Groups[1].Value
                 : html;
 
-            // Remove head/meta if still present
-            content = Regex.Replace(content, @"<head[^>]*>.*?</head>", "",
-                RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            // Remove escape characters
+            content = Regex.Replace(content, "[\n\r\t]", "");
 
             // Normalize whitespace between tags and text
-            content = Regex.Replace(content, @">\s+<", "><"); // between tags
-            content = Regex.Replace(content, @"\s+", " ");    // inside text
+            content = Regex.Replace(content, @">\s+<", "><");
+            content = Regex.Replace(content, @"\s+", " ");
 
             return content.Trim();
-        }
 
+        }
         EventTemplate GetAppliedEventTemplate(User user, Models.Group group, Event @event)
         {
             EventTemplateSet eventTemplateSet;

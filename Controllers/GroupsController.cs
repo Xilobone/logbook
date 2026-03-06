@@ -71,11 +71,23 @@ namespace Logbook.Controllers
             (bool isValidId, User source, IActionResult idError) = ValidateUserId(groupRequest.SourceId);
             if (!isValidId) return idError;
 
+            if (!source.Id.Equals(user.Id))
+            {
+                return Conflict(new
+                {
+                    Message = "You can only set the source id to your own user id",
+                    Success = false
+                });
+            }
+
             if (!source.CanBeSource) return Conflict(new
             {
                 Message = $"User {source.DisplayName} does not have the right registration to act as the source",
                 Success = false
             });
+
+
+
 
             if (user.Groups.Count >= _settings.maxGroups)
             {
@@ -153,6 +165,7 @@ namespace Logbook.Controllers
                 (bool isValid, User source, IActionResult error) = ValidateUserId(updateParam.SourceId);
                 if (!isValid) return error;
 
+                if (!source.Id.Equals(user.Id)) return Conflict($"You can only set the source id to your own user id");
                 if (!source.CanBeSource) return Conflict($"User {source.DisplayName} does not have the right registration to act as the source");
 
                 group.SourceId = source.Id;

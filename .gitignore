@@ -6,3 +6,4 @@ keys/
 
 logbook.db*
 appsettings*
+Deploy.ps1

@@ -29,6 +29,9 @@ namespace Logbook
             ["EVENT.TIME.END"] = (e, g) => ConvertDateTime(e.EndTime, g.TimeZone, TIME_FORMAT),
             ["EVENT.TIME.END.UTC"] = (e, g) => ConvertDateTime(e.EndTime, "UTC", TIME_FORMAT),
             ["GROUP.NAME"] = (e, g) => g.Name,
+            ["EVENT.ATTENDEES.ATTENDING"] = (e,g) => GetAttendees(e, EventAttendance.AttendanceStatus.Attending),
+            ["EVENT.ATTENDEES.TENTATIVE"] = (e,g) => GetAttendees(e, EventAttendance.AttendanceStatus.Tentative),
+            ["EVENT.ATTENDEES.UNAVAILABLE"] = (e,g) => GetAttendees(e, EventAttendance.AttendanceStatus.Unavailable),
         };
         /// <summary>
         /// Fills the given template text with the macros
@@ -51,6 +54,15 @@ namespace Logbook
         {
             DateTime converted = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(dateTime, "UTC", timeZone);
             return converted.ToString(format);
+        }
+
+        static string GetAttendees(Event @event, EventAttendance.AttendanceStatus status)
+        {
+            List<string> attendees = [.. @event.EventAttendances
+                .Where(a => a.Status == status)
+                .Select(a => a.Name)];
+
+            return string.Join(", ", attendees);
         }
     }
 }

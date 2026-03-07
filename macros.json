@@ -55,7 +55,7 @@
             "macro": "${EVENT.DATETIME.END.UTC}",
             "description": "The end date and time of the event in UTC timezone"
         },
-                {
+        {
             "name": "Event start time",
             "macro": "${EVENT.TIME.START}",
             "description": "The start time of the event, displayed in the groups timezone"
@@ -74,6 +74,21 @@
             "name": "Event end time in UTC",
             "macro": "${EVENT.TIME.END.UTC}",
             "description": "The end time of the event in UTC timezone"
+        },
+        {
+            "name": "Attending users of an event",
+            "macro": "${EVENT.ATTENDEES.ATTENDING}",
+            "description": "A comma seperated list of all people that will be attending the event"
+        },
+        {
+            "name": "Tentative users of an event",
+            "macro": "${EVENT.ATTENDEES.TENTATIVE}",
+            "description": "A comma seperated list of all people that will be might be attending the event"
+        },
+        {
+            "name": "Unavailable users of an event",
+            "macro": "${EVENT.ATTENDEES.UNAVAILABLE}",
+            "description": "A comma seperated list of all people that will not be attending the event"
         },
         {
             "name": "Group name",

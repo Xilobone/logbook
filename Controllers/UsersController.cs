@@ -34,7 +34,7 @@ namespace Logbook.Controllers
             (bool isValidRequest, User user, IActionResult error) = await Util.Auth.ValidateRequest(this, _context);
             if (!isValidRequest) return error;
 
-            var users = _context.Users.Where(u => u.Enabled).Select(u => new
+            var users = _context.Users.Where(u => u.CalendarRegistration.Enabled).Select(u => new
             {
                 u.Id,
                 u.DisplayName

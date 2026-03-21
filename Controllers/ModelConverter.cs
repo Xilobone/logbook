@@ -14,6 +14,39 @@ namespace Logbook.Util
         public class ToDTO
         {
             /// <summary>
+            /// Converts an actual user to a DTO user
+            /// </summary>
+            /// <param name="user">The user to convert</param>
+            /// <returns>The converted DTO user</returns>
+            public static DTO.User User(Models.User user)
+            {
+                DTO.User dtoUser = new DTO.User()
+                {
+                    Id = user.Id,
+                    DisplayName = user.DisplayName,
+                    CalendarName = user.CalendarName,
+                    Alias = user.Alias,
+                    AliasMatchingType = user.AliasMatchingType,
+                    CalendarRegistration = Registration(user.CalendarRegistration),
+                    OneDriveRegistration = Registration(user.OneDriveRegistration)
+                };
+
+                return dtoUser;
+            }
+
+            static DTO.Registration Registration(Registration registration)
+            {
+                DTO.Registration dtoRegistration = new DTO.Registration()
+                {
+                    Enabled = registration.Enabled,
+                    LinkedAccount = registration.LinkedAccount
+
+                };
+
+                return dtoRegistration;
+            }
+
+            /// <summary>
             /// Converts an actual group to a DTO group
             /// </summary>
             /// <param name="group">The group to convert</param>
@@ -66,7 +99,7 @@ namespace Logbook.Util
                 DTO.PersonalEventTemplateSet dtoPersonalEventTemplateSet = new DTO.PersonalEventTemplateSet()
                 {
                     Enabled = personalEventTemplateSet.Enabled,
-                    EventTemplateSet = EventTemplateSet(personalEventTemplateSet.EventTemplateSet),  
+                    EventTemplateSet = EventTemplateSet(personalEventTemplateSet.EventTemplateSet),
                 };
 
                 return dtoPersonalEventTemplateSet;
@@ -132,8 +165,8 @@ namespace Logbook.Util
                 {
                     DifferentiateOnAttendance = dtoEventTemplateSet.DifferentiateOnAttendance,
                     Attending = EventTemplate(dtoEventTemplateSet.Attending ?? DTO.EventTemplate.None),
-                    Tentative = EventTemplate(dtoEventTemplateSet.Tentative  ?? DTO.EventTemplate.None),
-                    Unavailable = EventTemplate(dtoEventTemplateSet.Unavailable  ?? DTO.EventTemplate.None),
+                    Tentative = EventTemplate(dtoEventTemplateSet.Tentative ?? DTO.EventTemplate.None),
+                    Unavailable = EventTemplate(dtoEventTemplateSet.Unavailable ?? DTO.EventTemplate.None),
                 };
 
                 return eventTemplateSet;

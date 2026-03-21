@@ -37,13 +37,13 @@ namespace Logbook.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>()
+            modelBuilder.Entity<Registration>()
                 .Property(u => u.AccessToken)
                 .HasConversion(
                     new EncryptedConverter()
                 );
 
-            modelBuilder.Entity<User>()
+            modelBuilder.Entity<Registration>()
                 .Property(u => u.RefreshToken)
                 .HasConversion(
                     new EncryptedConverter()

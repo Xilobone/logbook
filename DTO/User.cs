@@ -6,8 +6,13 @@ namespace Logbook.DTO
     /// <summary>
     /// Represents the personal config data that is able to be set
     /// </summary>
-    public class Me
+    public class User
     {
+        /// <summary>
+        /// The id of the user
+        /// </summary>
+        public Guid? Id { get; set; }
+
         /// <summary>
         /// The display name of the user
         /// </summary>
@@ -15,10 +20,10 @@ namespace Logbook.DTO
         [MaxLength(50)]
         public string? DisplayName { get; set; }
 
-        /// <summary>
-        /// Whether the user has the logbook service enabled
-        /// </summary>
-        public bool? Enabled { get; set; }
+        // /// <summary>
+        // /// Whether the user has the logbook service enabled
+        // /// </summary>
+        // public bool? Enabled { get; set; }
 
         /// <summary>
         /// The name of the calendar to use for the logbook service
@@ -37,6 +42,16 @@ namespace Logbook.DTO
         /// <summary>
         /// The type of matching to perform
         /// </summary>
-        public User.AliasMatching? AliasMatchingType {get; set;}
+        public Models.User.AliasMatching? AliasMatchingType { get; set; }
+
+        /// <summary>
+        /// The users calendar registration
+        /// </summary>
+        public Registration? CalendarRegistration { get; set; }
+
+        /// <summary>
+        /// The users OneDrive registration
+        /// </summary>
+        public Registration? OneDriveRegistration { get; set; }
     }
 }

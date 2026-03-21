@@ -80,7 +80,7 @@ namespace Logbook.Controllers
                 });
             }
 
-            if (!source.CanBeSource) return Conflict(new
+            if (!source.OneDriveRegistration.Enabled) return Conflict(new
             {
                 Message = $"User {source.DisplayName} does not have the right registration to act as the source",
                 Success = false
@@ -166,7 +166,7 @@ namespace Logbook.Controllers
                 if (!isValid) return error;
 
                 if (!source.Id.Equals(user.Id)) return Conflict($"You can only set the source id to your own user id");
-                if (!source.CanBeSource) return Conflict($"User {source.DisplayName} does not have the right registration to act as the source");
+                if (!source.OneDriveRegistration.Enabled) return Conflict($"User {source.DisplayName} does not have the right registration to act as the source");
 
                 group.SourceId = source.Id;
             }

@@ -38,7 +38,7 @@ namespace Logbook.Services
             List<User> users = context.Users.ToList();
             foreach (User user in users)
             {
-                if (!user.Enabled)
+                if (!user.CalendarRegistration.Enabled)
                 {
                     Logger.Log($"{user.Id} is not enabled skipping", Logger.LogLevel.Debug);
                     continue;
@@ -52,7 +52,7 @@ namespace Logbook.Services
 
                 Logger.Log($"Going to update events of user {user.Id}");
 
-                Graph.GraphClient graphClient = clientProvider.Create(user, context);
+                Graph.GraphClient graphClient = clientProvider.Create(user.CalendarRegistration, context);
 
                 if (!await graphClient.Calendars.DoesExist(user.CalendarName))
                 {

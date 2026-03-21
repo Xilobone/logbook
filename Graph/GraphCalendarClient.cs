@@ -9,18 +9,15 @@ namespace Logbook.Graph
     public class GraphCalendarClient
     {
         readonly GraphClient _graphClient;
-        readonly User _user;
         Dictionary<string, string?> cachedCalendarIds = new Dictionary<string, string?>();
 
         /// <summary>
         /// Creates a new graph calendar client
         /// </summary>
         /// <param name="graphClient">The main graph client</param>
-        /// <param name="user">The user the client was made to act on behalf on of</param>
-        public GraphCalendarClient(GraphClient graphClient, User user)
+        public GraphCalendarClient(GraphClient graphClient)
         {
             _graphClient = graphClient;
-            _user = user;
         }
 
         /// <summary>
@@ -71,7 +68,7 @@ namespace Logbook.Graph
             }
             else
             {
-                string response = await _graphClient.MakeGraphRequestGet($"me/calendars?$filter=name eq '{calendarName}'");
+                string response = await _graphClient.MakeGraphRequestGetJson($"me/calendars?$filter=name eq '{calendarName}'");
 
                 QueryResponse<Calendar> calendars = JsonSerializer.Deserialize<QueryResponse<Calendar>>(response)!;
 
@@ -111,7 +108,7 @@ namespace Logbook.Graph
             string? calendarId = await GetId(calendarName);
             if (string.IsNullOrEmpty(calendarId))
             {
-                Logger.Log($"Calendar named {calendarName} was not found for user with id {_user.Id}", Logger.LogLevel.Warning);
+                Logger.Log($"Calendar named {calendarName} was not found", Logger.LogLevel.Warning);
                 return false;
             }
 
@@ -149,14 +146,14 @@ namespace Logbook.Graph
             string? calendarId = await GetId(calendarName);
             if (string.IsNullOrEmpty(calendarId)) return events;
 
-            string eventResponse = await _graphClient.MakeGraphRequestGet($"me/calendars/{calendarId}/events");
+            string eventResponse = await _graphClient.MakeGraphRequestGetJson($"me/calendars/{calendarId}/events");
 
             QueryResponse<Event> eventCollection = JsonSerializer.Deserialize<QueryResponse<Event>>(eventResponse)!;
             events.AddRange(eventCollection.Values);
 
             while (!string.IsNullOrEmpty(eventCollection.NextUrl))
             {
-                eventResponse = await _graphClient.MakeGraphRequestGet(eventCollection.NextUrl, false);
+                eventResponse = await _graphClient.MakeGraphRequestGetJson(eventCollection.NextUrl, false);
 
                 eventCollection = JsonSerializer.Deserialize<QueryResponse<Event>>(eventResponse)!;
                 events.AddRange(eventCollection.Values);

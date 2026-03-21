@@ -105,7 +105,7 @@ namespace Logbook
         /// <param name="logLevel">The level to log the message at</param>
         /// <param name="logChannel">The logging channel to use</param>
         public static void Log(object? message, LogLevel logLevel, string logChannel)
-        {   
+        {
             if (_config == null)
             {
                 Console.WriteLine("Logger config not set, cannot properly log messages");
@@ -136,17 +136,24 @@ namespace Logbook
 
             if (channel.writeToFile)
             {
-                using Stream stream = new FileStream
-                (
-                    channel.filePath,
-                    FileMode.Append,
-                    FileAccess.Write,
-                    FileShare.ReadWrite
-                );
+                try
+                {
 
-                using StreamWriter writer = new StreamWriter(stream);
-                writer.WriteLine(formatted);
-                writer.Close();
+                    using Stream stream = new FileStream
+                    (
+                        channel.filePath,
+                        FileMode.Append,
+                        FileAccess.Write,
+                        FileShare.ReadWrite
+                    );
+
+                    using StreamWriter writer = new StreamWriter(stream);
+                    writer.WriteLine(formatted);
+                    writer.Close();
+                } catch (IOException)
+                {
+                    Console.WriteLine($"Could not access file");
+                }
             }
         }
 

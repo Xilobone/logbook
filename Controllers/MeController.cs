@@ -41,24 +41,24 @@ namespace Logbook.Controllers
 
             if (user == null)
             {
-                return Ok(new
+                //User doesnt exist yet
+                user = new Models.User()
                 {
-                    caller.DisplayName,
-                    Registered = false
-                });
+                    Id = caller.Id,
+                    Username = caller.UserPrincipalName,
+                    DisplayName = caller.DisplayName,
+                    CalendarRegistration = new Registration(),
+                    OneDriveRegistration = new Registration(),
+                    // Enabled = false,
+                    // CanBeSource = false,
+                    // HasCalendarLinked = false,
+                };
+
+                _context.Users.Add(user);
+                _context.SaveChanges();
             }
 
-            return Ok(new
-            {
-                user.Id,
-                user.DisplayName,
-                user.Enabled,
-                user.CalendarName,
-                user.CanBeSource,
-                user.Alias,
-                user.AliasMatchingType,
-                Registered = true,
-            });
+            return Ok(ModelConverter.ToDTO.User(user));
         }
 
         /// <summary>
@@ -67,17 +67,25 @@ namespace Logbook.Controllers
         /// <param name="config">The users updated configuration</param>
         /// <returns>A message indicating the config was updated</returns>
         [HttpPost()]
-        public async Task<IActionResult> SetPersonalConfig([FromBody] DTO.Me config)
+        public async Task<IActionResult> SetPersonalConfig([FromBody] DTO.User config)
         {
             (bool isValidRequest, Models.User user, IActionResult error) = await Auth.ValidateRequest(this, _context);
             if (!isValidRequest) return error;
 
-            if (config.Enabled != null) user.Enabled = (bool)config.Enabled;
+            // if (config.Enabled != null) user.Enabled = (bool)config.Enabled;
             if (!string.IsNullOrEmpty(config.DisplayName)) user.DisplayName = config.DisplayName!;
             if (!string.IsNullOrEmpty(config.CalendarName)) user.CalendarName = config.CalendarName!;
             if (!string.IsNullOrEmpty(config.Alias)) user.Alias = config.Alias!;
             if (config.AliasMatchingType != null) user.AliasMatchingType = (Models.User.AliasMatching)config.AliasMatchingType;
+            if (config.CalendarRegistration != null)
+            {
+                if (config.CalendarRegistration.Enabled != null) user.CalendarRegistration.Enabled = (bool)config.CalendarRegistration.Enabled;
+            }
 
+            if (config.OneDriveRegistration != null)
+            {
+                if (config.OneDriveRegistration.Enabled != null) user.OneDriveRegistration.Enabled = (bool)config.OneDriveRegistration.Enabled;
+            }
             _context.SaveChanges();
             return Ok(new
             {

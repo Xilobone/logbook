@@ -26,12 +26,12 @@ namespace Logbook.Graph
         /// <summary>
         /// Creates a new graph client
         /// </summary>
-        /// <param name="user">The user that the client makes request on behalf of</param>
-        /// <param name="context">The databasecontext to use</param>
+        /// <param name="registration">The user registration that the client makes request on behalf of</param>
+        /// <param name="context">The database context to use</param>
         /// <returns>A graph client that can be used to make requests</returns>
-        public GraphClient Create(Models.User user, LogbookDBContext context)
+        public GraphClient Create(Models.Registration registration, LogbookDBContext context)
         {
-            return new GraphClient(_config, user, context);
+            return new GraphClient(_config, registration, context);
         }
     }
 
@@ -45,7 +45,8 @@ namespace Logbook.Graph
         /// </summary>
         public readonly GraphCalendarClient Calendars;
         readonly IConfiguration _config;
-        Models.User _user;
+        // Models.User _user;
+        Models.Registration _registration;
         LogbookDBContext _context;
 
         HttpClient _httpClient;
@@ -55,27 +56,36 @@ namespace Logbook.Graph
         /// Creates a new graph client
         /// </summary>
         /// <param name="config">The configuration to use</param>
-        /// <param name="user">The user that the client makes request on behalf of</param>
+        /// <param name="registration">The user registration that the client makes request on behalf of</param>
         /// <param name="context">The database context to use to save new access and refresh tokens</param>
-        public GraphClient(IConfiguration config, Models.User user, LogbookDBContext context)
+        public GraphClient(IConfiguration config, Models.Registration registration, LogbookDBContext context)
         {
             _config = config;
-            _user = user;
+            _registration = registration;
             _context = context;
 
             _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", user.AccessToken);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", registration.AccessToken);
 
-            Calendars = new GraphCalendarClient(this, _user);
+            Calendars = new GraphCalendarClient(this);
         }
 
         /// <summary>
         /// Gets information about the user
         /// </summary>
         /// <returns>Data about the user</returns>
-        public async Task<string> Me()
+        public async Task<User> Me()
         {
-            return await MakeGraphRequestGet("me");
+            string json = await MakeGraphRequestGetJson("me");
+
+            User? user =  JsonSerializer.Deserialize<User>(json);
+
+            if (user == null)
+            {
+                throw new Exception("User null");
+            }
+
+            return user;
         }
 
         /// <summary>
@@ -85,10 +95,9 @@ namespace Logbook.Graph
         /// <returns>The content of the file, as a byte array</returns>
         public async Task<byte[]> GetOnedriveFile(string filePath)
         {
-            string response = await MakeGraphRequestGet($"me/drive/root:{filePath}");
-            Graph.DriveItem driveItem = JsonSerializer.Deserialize<Graph.DriveItem>(response)!;
+            byte[] response = await MakeGraphRequestGetBytes($"me/drive/root:{filePath}:/content");
+            return response;
 
-            return await _httpClient.GetByteArrayAsync(driveItem.DownloadUrl);
         }
 
         /// <summary>
@@ -97,7 +106,25 @@ namespace Logbook.Graph
         /// <param name="endpoint">The endpoint to request</param>
         /// <param name="prefixGraph">Whether to prefix the graph url to the endpoint, default true</param>
         /// <returns>A string containing the graph response as json</returns>
-        public async Task<string> MakeGraphRequestGet(string endpoint, bool prefixGraph = true)
+        public async Task<string> MakeGraphRequestGetJson(string endpoint, bool prefixGraph = true)
+        {
+            HttpContent content = await MakeGraphRequestGet(endpoint, prefixGraph);
+            return await content.ReadAsStringAsync();
+        }
+
+        /// <summary>
+        /// Makes a GET request to the graph api
+        /// </summary>
+        /// <param name="endpoint">The endpoint to request</param>
+        /// <param name="prefixGraph">Whether to prefix the graph url to the endpoint, default true</param>
+        /// <returns>A byte array of the obtained data</returns>
+        public async Task<byte[]> MakeGraphRequestGetBytes(string endpoint, bool prefixGraph = true)
+        {
+            HttpContent content = await MakeGraphRequestGet(endpoint, prefixGraph);
+            return await content.ReadAsByteArrayAsync();
+        }
+
+        async Task<HttpContent> MakeGraphRequestGet(string endpoint, bool prefixGraph = true)
         {
             string url = prefixGraph ? $"{_config["AzureAD:GraphUrl"]}{endpoint}" : endpoint;
             HttpResponseMessage response = await _httpClient.GetAsync(url);
@@ -112,7 +139,7 @@ namespace Logbook.Graph
                 response = await _httpClient.GetAsync(url);
             }
 
-            return await response.Content.ReadAsStringAsync();
+            return response.Content;
         }
 
         /// <summary>
@@ -178,7 +205,7 @@ namespace Logbook.Graph
                     ["client_id"] = _config["AzureAD:ClientId"]!,
                     ["client_secret"] = _config["AzureAD:ClientSecret"]!,
                     ["grant_type"] = "refresh_token",
-                    ["refresh_token"] = _user.RefreshToken,
+                    ["refresh_token"] = _registration.RefreshToken,
                     ["scope"] = "https://graph.microsoft.com/.default"
                 })
             };
@@ -194,8 +221,8 @@ namespace Logbook.Graph
 
             TokenResponse token = JsonSerializer.Deserialize<TokenResponse>(refreshData)!;
 
-            _user.AccessToken = token.AccessToken;
-            _user.RefreshToken = token.RefreshToken;
+            _registration.AccessToken = token.AccessToken;
+            _registration.RefreshToken = token.RefreshToken;
 
             _context.SaveChanges();
             return token.AccessToken;

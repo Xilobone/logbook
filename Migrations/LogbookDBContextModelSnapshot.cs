@@ -220,7 +220,7 @@ namespace logbook.Migrations
                     b.ToTable("PersonalEventTemplateSet");
                 });
 
-            modelBuilder.Entity("Logbook.Models.User", b =>
+            modelBuilder.Entity("Logbook.Models.Registration", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -229,6 +229,28 @@ namespace logbook.Migrations
                     b.Property<string>("AccessToken")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LinkedAccount")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Registration");
+                });
+
+            modelBuilder.Entity("Logbook.Models.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Alias")
                         .IsRequired()
@@ -241,25 +263,25 @@ namespace logbook.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<bool>("CanBeSource")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<Guid>("CalendarRegistrationId")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("RefreshToken")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<Guid>("OneDriveRegistrationId")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CalendarRegistrationId");
+
+                    b.HasIndex("OneDriveRegistrationId");
 
                     b.ToTable("Users");
                 });
@@ -360,6 +382,25 @@ namespace logbook.Migrations
                     b.Navigation("Group");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Logbook.Models.User", b =>
+                {
+                    b.HasOne("Logbook.Models.Registration", "CalendarRegistration")
+                        .WithMany()
+                        .HasForeignKey("CalendarRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Logbook.Models.Registration", "OneDriveRegistration")
+                        .WithMany()
+                        .HasForeignKey("OneDriveRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CalendarRegistration");
+
+                    b.Navigation("OneDriveRegistration");
                 });
 
             modelBuilder.Entity("Logbook.Models.Event", b =>

@@ -26,7 +26,16 @@ namespace Logbook.Util
                 return null;
             }
 
-            //get required fields from token
+           return GetCallerByAccessToken(accessToken);
+        }
+
+        /// <summary>
+        /// Gets the caller of the access token
+        /// </summary>
+        /// <param name="accessToken">The access token to get the caller of</param>
+        /// <returns>An object containing info about the caller, or null if no valid token was provided</returns>
+        public static DTO.TokenCaller GetCallerByAccessToken(string accessToken)
+        {
             var handler = new JwtSecurityTokenHandler();
             var jwt = handler.ReadJwtToken(accessToken);
             string? oid = jwt.Claims.FirstOrDefault(c => c.Type == "oid")?.Value;

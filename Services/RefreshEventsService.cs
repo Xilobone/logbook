@@ -46,6 +46,7 @@ namespace Logbook.Services
 
             foreach (Group group in groups)
             {
+                Logger.Log($"Getting events for group {group.Name}");
                 User? sourceUser = context.Users.Where(u => u.Id == group.SourceId).FirstOrDefault();
                 if (sourceUser == null)
                 {
@@ -53,10 +54,9 @@ namespace Logbook.Services
                     continue;
                 }
 
-                Graph.GraphClient graphClient = clientProvider.Create(sourceUser, context);
+                Graph.GraphClient graphClient = clientProvider.Create(sourceUser.OneDriveRegistration, context);
 
                 byte[] fileBytes = await graphClient.GetOnedriveFile(group.FilePath);
-
                 using MemoryStream stream = new MemoryStream(fileBytes);
                 List<Event> events = CreateEventsFromStream(stream, group);
 

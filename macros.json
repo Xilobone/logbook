@@ -37,17 +37,17 @@
         },
         {
             "name": "Event date",
-            "macro": "${EVENT.DATE(p1,p2)}",
+            "macro": "${EVENT.DATE(type,timezone)}",
             "description": "The date of the event, can be specified to be either the start or end date",
             "parameters": [
                 {
-                    "name": "p1",
+                    "name": "type",
                     "description": "Specifies whether the start or end date is required",
                     "allowedValues": "start/end",
                     "default": "start"
                 },
                 {
-                    "name": "p2",
+                    "name": "timezone",
                     "description": "Specifies the time zone in which the date should be provided",
                     "allowedValues": "any valid timezone",
                     "default": "The groups time zone"
@@ -56,17 +56,17 @@
         },
                 {
             "name": "Event datetime",
-            "macro": "${EVENT.DATETIME(p1,p2)}",
+            "macro": "${EVENT.DATETIME(type,timezone)}",
             "description": "The datetime of the event, can be specified to be either the start or end datetime",
             "parameters": [
                 {
-                    "name": "p1",
+                    "name": "type",
                     "description": "Specifies whether the start or end datetime is required",
                     "allowedValues": "start/end",
                     "default": "start"
                 },
                 {
-                    "name": "p2",
+                    "name": "timezone",
                     "description": "Specifies the time zone in which the datetime should be provided",
                     "allowedValues": "any valid timezone",
                     "default": "The groups time zone"
@@ -75,17 +75,17 @@
         },
                 {
             "name": "Event time",
-            "macro": "${EVENT.TIME(p1,p2)}",
+            "macro": "${EVENT.TIME(type,timezone)}",
             "description": "The time of the event, can be specified to be either the start or end time",
             "parameters": [
                 {
-                    "name": "p1",
+                    "name": "type",
                     "description": "Specifies whether the start or end time is required",
                     "allowedValues": "start/end",
                     "default": "start"
                 },
                 {
-                    "name": "p2",
+                    "name": "timezone",
                     "description": "Specifies the time zone in which the time should be provided",
                     "allowedValues": "any valid timezone",
                     "default": "The groups time zone"

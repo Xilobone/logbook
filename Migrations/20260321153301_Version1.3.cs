@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace logbook.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Version13 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,21 +32,13 @@ namespace logbook.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "Registration",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    Username = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DisplayName = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Alias = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AliasMatchingType = table.Column<int>(type: "int", nullable: false),
-                    CalendarName = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
                     Enabled = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    CanBeSource = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    LinkedAccount = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     AccessToken = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     RefreshToken = table.Column<string>(type: "longtext", nullable: false)
@@ -54,7 +46,7 @@ namespace logbook.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.PrimaryKey("PK_Registration", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -87,6 +79,41 @@ namespace logbook.Migrations
                         name: "FK_EventTemplateSet_EventTemplate_UnavailableId",
                         column: x => x.UnavailableId,
                         principalTable: "EventTemplate",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Username = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DisplayName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Alias = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AliasMatchingType = table.Column<int>(type: "int", nullable: false),
+                    CalendarName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CalendarRegistrationId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OneDriveRegistrationId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_Registration_CalendarRegistrationId",
+                        column: x => x.CalendarRegistrationId,
+                        principalTable: "Registration",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Users_Registration_OneDriveRegistrationId",
+                        column: x => x.OneDriveRegistrationId,
+                        principalTable: "Registration",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -278,6 +305,16 @@ namespace logbook.Migrations
                 name: "IX_PersonalEventTemplateSet_UserId",
                 table: "PersonalEventTemplateSet",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_CalendarRegistrationId",
+                table: "Users",
+                column: "CalendarRegistrationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_OneDriveRegistrationId",
+                table: "Users",
+                column: "OneDriveRegistrationId");
         }
 
         /// <inheritdoc />
@@ -300,6 +337,9 @@ namespace logbook.Migrations
 
             migrationBuilder.DropTable(
                 name: "Groups");
+
+            migrationBuilder.DropTable(
+                name: "Registration");
 
             migrationBuilder.DropTable(
                 name: "EventTemplateSet");

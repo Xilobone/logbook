@@ -56,30 +56,53 @@ namespace Logbook.Models
         /// </summary>
         public string CalendarName { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Whether the user is enabled and their calendar is updated
-        /// </summary>
-        public bool Enabled { get; set; } = false;
+        // /// <summary>
+        // /// Whether the user is enabled and their calendar is updated
+        // /// </summary>
+        // public bool Enabled { get; set; } = false;
 
         /// <summary>
-        /// Whether the user can be the source for the schedule files
+        /// The users registration for accessing the calendar
         /// </summary>
-        public bool CanBeSource { get; set; } = false;
+        public virtual Registration CalendarRegistration {get; set;} = Registration.None;
+
+        /// <summary>
+        /// The users registration for accessing onedrive
+        /// </summary>
+        public virtual Registration OneDriveRegistration {get; set;} = Registration.None;
+        // /// <summary>
+        // /// Whether the user can be the source for the schedule files
+        // /// </summary>
+        // public bool CanBeSource { get; set; } = false;
+
+        // /// <summary>
+        // /// The account name of the linked onedrive account
+        // /// </summary>
+        // public string LinkedOneDriveAccount {get; set;} = string.Empty;
 
         /// <summary>
         /// The groups the user belongs to
         /// </summary>
         public virtual ICollection<Group> Groups { get; set; } = new List<Group>();
 
-        /// <summary>
-        /// The accessToken assosiated with this user
-        /// </summary>
-        public string AccessToken { get; set; } = string.Empty;
+        // /// <summary>
+        // /// Indicates whether the user has an outlook calendar linked
+        // /// </summary>
+        // public bool HasCalendarLinked {get; set; } = false;
 
-        /// <summary>
-        /// The refreshToken assosiated with this user
-        /// </summary>
-        public string RefreshToken { get; set; } = string.Empty;
+        // /// <summary>
+        // /// The account name of the linked calendar account
+        // /// </summary>
+        // public string LinkedCalendarAccount {get; set;} = string.Empty;
+        // /// <summary>
+        // /// The accessToken assosiated with this user
+        // /// </summary>
+        // public string AccessToken { get; set; } = string.Empty;
+
+        // /// <summary>
+        // /// The refreshToken assosiated with this user
+        // /// </summary>
+        // public string RefreshToken { get; set; } = string.Empty;
 
         /// <summary>
         /// Collection of all personal event templates of the user

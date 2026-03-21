@@ -9,7 +9,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     ALTER DATABASE CHARACTER SET utf8mb4;
 
@@ -23,7 +23,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE TABLE `EventTemplate` (
         `Id` char(36) COLLATE ascii_general_ci NOT NULL,
@@ -43,20 +43,15 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
-    CREATE TABLE `Users` (
+    CREATE TABLE `Registration` (
         `Id` char(36) COLLATE ascii_general_ci NOT NULL,
-        `Username` longtext CHARACTER SET utf8mb4 NOT NULL,
-        `DisplayName` longtext CHARACTER SET utf8mb4 NOT NULL,
-        `Alias` longtext CHARACTER SET utf8mb4 NOT NULL,
-        `AliasMatchingType` int NOT NULL,
-        `CalendarName` longtext CHARACTER SET utf8mb4 NOT NULL,
         `Enabled` tinyint(1) NOT NULL,
-        `CanBeSource` tinyint(1) NOT NULL,
+        `LinkedAccount` longtext CHARACTER SET utf8mb4 NOT NULL,
         `AccessToken` longtext CHARACTER SET utf8mb4 NOT NULL,
         `RefreshToken` longtext CHARACTER SET utf8mb4 NOT NULL,
-        CONSTRAINT `PK_Users` PRIMARY KEY (`Id`)
+        CONSTRAINT `PK_Registration` PRIMARY KEY (`Id`)
     ) CHARACTER SET=utf8mb4;
 
     END IF;
@@ -69,7 +64,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE TABLE `EventTemplateSet` (
         `Id` char(36) COLLATE ascii_general_ci NOT NULL,
@@ -93,7 +88,33 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
+
+    CREATE TABLE `Users` (
+        `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+        `Username` longtext CHARACTER SET utf8mb4 NOT NULL,
+        `DisplayName` longtext CHARACTER SET utf8mb4 NOT NULL,
+        `Alias` longtext CHARACTER SET utf8mb4 NOT NULL,
+        `AliasMatchingType` int NOT NULL,
+        `CalendarName` longtext CHARACTER SET utf8mb4 NOT NULL,
+        `CalendarRegistrationId` char(36) COLLATE ascii_general_ci NOT NULL,
+        `OneDriveRegistrationId` char(36) COLLATE ascii_general_ci NOT NULL,
+        CONSTRAINT `PK_Users` PRIMARY KEY (`Id`),
+        CONSTRAINT `FK_Users_Registration_CalendarRegistrationId` FOREIGN KEY (`CalendarRegistrationId`) REFERENCES `Registration` (`Id`) ON DELETE CASCADE,
+        CONSTRAINT `FK_Users_Registration_OneDriveRegistrationId` FOREIGN KEY (`OneDriveRegistrationId`) REFERENCES `Registration` (`Id`) ON DELETE CASCADE
+    ) CHARACTER SET=utf8mb4;
+
+    END IF;
+END //
+DELIMITER ;
+CALL MigrationsScript();
+DROP PROCEDURE MigrationsScript;
+
+DROP PROCEDURE IF EXISTS MigrationsScript;
+DELIMITER //
+CREATE PROCEDURE MigrationsScript()
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE TABLE `Groups` (
         `Id` char(36) COLLATE ascii_general_ci NOT NULL,
@@ -120,7 +141,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE TABLE `Events` (
         `Id` char(36) COLLATE ascii_general_ci NOT NULL,
@@ -144,7 +165,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE TABLE `GroupUser` (
         `GroupsId` char(36) COLLATE ascii_general_ci NOT NULL,
@@ -164,7 +185,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE TABLE `PersonalEventTemplateSet` (
         `Id` char(36) COLLATE ascii_general_ci NOT NULL,
@@ -188,7 +209,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE TABLE `EventAttendance` (
         `Id` char(36) COLLATE ascii_general_ci NOT NULL,
@@ -209,7 +230,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE INDEX `IX_EventAttendance_EventId` ON `EventAttendance` (`EventId`);
 
@@ -223,7 +244,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE INDEX `IX_Events_GroupId` ON `Events` (`GroupId`);
 
@@ -237,7 +258,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE INDEX `IX_EventTemplateSet_AttendingId` ON `EventTemplateSet` (`AttendingId`);
 
@@ -251,7 +272,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE INDEX `IX_EventTemplateSet_TentativeId` ON `EventTemplateSet` (`TentativeId`);
 
@@ -265,7 +286,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE INDEX `IX_EventTemplateSet_UnavailableId` ON `EventTemplateSet` (`UnavailableId`);
 
@@ -279,7 +300,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE INDEX `IX_Groups_EventTemplateSetId` ON `Groups` (`EventTemplateSetId`);
 
@@ -293,7 +314,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE INDEX `IX_GroupUser_UsersId` ON `GroupUser` (`UsersId`);
 
@@ -307,7 +328,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE INDEX `IX_PersonalEventTemplateSet_EventTemplateSetId` ON `PersonalEventTemplateSet` (`EventTemplateSetId`);
 
@@ -321,7 +342,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE INDEX `IX_PersonalEventTemplateSet_GroupId` ON `PersonalEventTemplateSet` (`GroupId`);
 
@@ -335,7 +356,7 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     CREATE INDEX `IX_PersonalEventTemplateSet_UserId` ON `PersonalEventTemplateSet` (`UserId`);
 
@@ -349,25 +370,9 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305202833_Initial') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
-    INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
-    VALUES ('20260305202833_Initial', '9.0.10');
-
-    END IF;
-END //
-DELIMITER ;
-CALL MigrationsScript();
-DROP PROCEDURE MigrationsScript;
-
-DROP PROCEDURE IF EXISTS MigrationsScript;
-DELIMITER //
-CREATE PROCEDURE MigrationsScript()
-BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305205018_Deploy') THEN
-
-    INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
-    VALUES ('20260305205018_Deploy', '9.0.10');
+    CREATE INDEX `IX_Users_CalendarRegistrationId` ON `Users` (`CalendarRegistrationId`);
 
     END IF;
 END //
@@ -379,10 +384,24 @@ DROP PROCEDURE IF EXISTS MigrationsScript;
 DELIMITER //
 CREATE PROCEDURE MigrationsScript()
 BEGIN
-    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260305205157_Deploy2') THEN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
+
+    CREATE INDEX `IX_Users_OneDriveRegistrationId` ON `Users` (`OneDriveRegistrationId`);
+
+    END IF;
+END //
+DELIMITER ;
+CALL MigrationsScript();
+DROP PROCEDURE MigrationsScript;
+
+DROP PROCEDURE IF EXISTS MigrationsScript;
+DELIMITER //
+CREATE PROCEDURE MigrationsScript()
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM `__EFMigrationsHistory` WHERE `MigrationId` = '20260321153301_Version1.3') THEN
 
     INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
-    VALUES ('20260305205157_Deploy2', '9.0.10');
+    VALUES ('20260321153301_Version1.3', '9.0.10');
 
     END IF;
 END //

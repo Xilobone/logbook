@@ -1,5 +1,7 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Logbook.Data;
+using Logbook.DTO;
 using Logbook.Graph;
 using Logbook.Models;
 using Microsoft.AspNetCore.Authentication;
@@ -120,7 +122,7 @@ namespace Logbook.Controllers
             string? graphAccessToken = json.RootElement.GetProperty("access_token").GetString();
             string? graphRefreshToken = json.RootElement.GetProperty("refresh_token").GetString();
 
-            GraphClient graphClient = _graphClientProvider.Create(new Registration()
+            GraphClient graphClient = _graphClientProvider.Create(new Models.Registration()
             {
                 AccessToken = graphAccessToken!,
                 RefreshToken = graphRefreshToken!,
@@ -170,16 +172,16 @@ namespace Logbook.Controllers
         /// <summary>
         /// Removes a registration from the user
         /// </summary>
-        /// <param name="source">True if it is the filesource registration, false if it is the calendar registration</param>
+        /// <param name="unregisterRequest">True if it is the filesource registration, false if it is the calendar registration</param>
         /// <returns>A status and message indicating whether the unregistration was successful</returns>
         [Authorize]
         [HttpPost("unregister")]
-        public async Task<IActionResult> Unregister([FromBody] bool source)
+        public async Task<IActionResult> Unregister([FromBody] UnregisterRequest unregisterRequest)
         {
             (bool isValidRequest, Models.User user, IActionResult requestError) = await Util.Auth.ValidateRequest(this, _context);
             if (!isValidRequest) return requestError;
 
-            if (source)
+            if (unregisterRequest.Source)
             {
                 if (user.OneDriveRegistration.LinkedAccount == null)
                 {

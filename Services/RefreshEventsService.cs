@@ -54,6 +54,12 @@ namespace Logbook.Services
                     continue;
                 }
 
+                if (!sourceUser.OneDriveRegistration.Enabled)
+                {
+                    Logger.Log($"Group {group.Name} has source user with disabled onedrive registration", Logger.LogLevel.Warning);
+                    continue;
+                }
+
                 Graph.GraphClient graphClient = clientProvider.Create(sourceUser.OneDriveRegistration, context);
 
                 byte[] fileBytes = await graphClient.GetOnedriveFile(group.FilePath);

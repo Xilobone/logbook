@@ -212,7 +212,6 @@ namespace Logbook.Graph
 
             HttpResponseMessage refreshResponse = await _httpClient.SendAsync(refreshRequest);
             string refreshData = await refreshResponse.Content.ReadAsStringAsync();
-            Logger.Log(refreshData, Logger.LogLevel.Warning);
 
 
             if (refreshResponse.StatusCode == HttpStatusCode.Unauthorized)
